@@ -5,10 +5,12 @@
 > 用「跟同事講話」的方式描述需求，AI 自動產出 n8n 完整 workflow。
 > 不會寫程式也能用。
 
-![TigerAI n8n Skill Pack 完整流程圖](docs/images/tigerai-flow.png)
+![TigerAI n8n Skill Pack — full pipeline diagram](docs/images/tigerai-flow-en.png)
 
 > 📊 **一張圖看懂**：使用者寫黃色便利貼（Layer 1 意圖）→ TigerAI Skill Pack 大腦（Cookbook + 2,061 參考 workflow + DSL v1.2 + 12 個 Skill + 4 大企業模式）→ 產出三層結構 workflow JSON（n8n 真實 workflow）。三大特色，零門檻。
 > *by n8n Taipei Ambassador Morris Lu*
+
+🌏 想看中文版流程圖？👉 [點此開啟 tigerai-flow.png](docs/images/tigerai-flow.png)
 
 ---
 
