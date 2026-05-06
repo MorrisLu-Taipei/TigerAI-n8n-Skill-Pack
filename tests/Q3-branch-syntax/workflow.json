@@ -1,0 +1,705 @@
+{
+  "name": "Q3-Order-Risk-Routing-BranchDSL",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求 (DSL v1.1 @branch)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -360
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 800,
+        "height": 360,
+        "content": "## 需求：電商訂單 AI 風險分流\n\n@flow: 收訂單 → AI 風險評分 → 依風險高/中/低三路處理\n@trigger: webhook POST /order\n@input: { order_id, customer_email, amount, ip, items[] }\n\n@step: AI 風險評分（OpenAI gpt-4o-mini）→ 回 {score: 0-100, reason: string}\n\n@branch: high when score > 70\n  - jira project=FRAUD create issue summary \"High-risk order {order_id}\"\n  - slack #fraud-alert \"⚠️ High-risk order {order_id} score={score}\"\n\n@branch: medium when score >= 30 and score <= 70\n  - postgres insert review_queue (order_id, score, reason, payload)\n\n@branch: low when score < 30\n  - postgres insert orders (order_id, customer_email, amount, risk_score)\n\n@output: webhook 回 { order_id, status: <branch_name> }\n@on-error: slack #ops-alert\n@assume: Postgres 表 review_queue / orders 已存在"
+      }
+    },
+    {
+      "id": "node-webhook",
+      "name": "WebhookOrder",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "order",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "notes": "@trigger",
+      "webhookId": "c79fad99-2faf-4514-ba8b-658a47b96dba"
+    },
+    {
+      "id": "node-openai",
+      "name": "OpenAI 風險評分",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.7,
+      "position": [
+        240,
+        100
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "你是電商詐欺評分器。回 JSON {\"score\": 0-100, \"reason\": \"<繁中一句>\"}。score 越高越可疑。只回 JSON。"
+            },
+            {
+              "role": "user",
+              "content": "={{ JSON.stringify($json.body) }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "notes": "@step: AI 風險評分",
+      "credentials": {
+        "openAiApi": {
+          "id": "stub-ZK31Z3LH",
+          "name": "STUB-openAiApi"
+        }
+      }
+    },
+    {
+      "id": "node-set-score",
+      "name": "Set 抽 score",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "s",
+              "name": "score",
+              "type": "number",
+              "value": "={{ $json.message.content.score }}"
+            },
+            {
+              "id": "r",
+              "name": "reason",
+              "type": "string",
+              "value": "={{ $json.message.content.reason }}"
+            },
+            {
+              "id": "o",
+              "name": "order",
+              "type": "object",
+              "value": "={{ $('WebhookOrder').item.json.body }}"
+            }
+          ]
+        }
+      },
+      "notes": "整理欄位給 switch 使用"
+    },
+    {
+      "id": "node-switch",
+      "name": "Switch by 風險等級 (含 fallback)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        100
+      ],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "high",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "h1",
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 70
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "medium",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "m1",
+                    "operator": {
+                      "type": "number",
+                      "operation": "gte"
+                    },
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 30
+                  },
+                  {
+                    "id": "m2",
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    },
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 70
+                  }
+                ]
+              }
+            },
+            {
+              "outputKey": "low",
+              "conditions": {
+                "options": {
+                  "version": 2,
+                  "leftValue": "",
+                  "caseSensitive": true,
+                  "typeValidation": "strict"
+                },
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "l1",
+                    "operator": {
+                      "type": "number",
+                      "operation": "lt"
+                    },
+                    "leftValue": "={{ $json.score }}",
+                    "rightValue": 30
+                  }
+                ]
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        },
+        "fallbackOutput": "fallback"
+      },
+      "notes": "DSL v1.1 規定無明示 fallback 必補；fallback 走 noOp + Layer 3 標註"
+    },
+    {
+      "id": "node-jira",
+      "name": "Jira 開 ticket (high)",
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        -160
+      ],
+      "parameters": {
+        "resource": "issue",
+        "operation": "create",
+        "project": "FRAUD",
+        "issueType": "Task",
+        "summary": "=⚠️ High-risk order {{ $json.order.order_id }} (score {{ $json.score }})",
+        "additionalFields": {
+          "description": "=Reason: {{ $json.reason }}\nOrder: {{ JSON.stringify($json.order) }}"
+        }
+      },
+      "notes": "@branch high 動作 1",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "stub-zqFbw2LX",
+          "name": "STUB-jiraSoftwareCloudApi"
+        }
+      }
+    },
+    {
+      "id": "node-slack-fraud",
+      "name": "Slack #fraud-alert (high)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1240,
+        -160
+      ],
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#fraud-alert",
+          "mode": "name"
+        },
+        "text": "=⚠️ High-risk order {{ $json.order.order_id }} score={{ $json.score }}",
+        "otherOptions": {}
+      },
+      "notes": "@branch high 動作 2",
+      "credentials": {
+        "slackApi": {
+          "id": "stub-eML40dxh",
+          "name": "STUB-slackApi"
+        }
+      }
+    },
+    {
+      "id": "node-pg-review",
+      "name": "Postgres review_queue (medium)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1000,
+        60
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "review_queue",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $json.order.order_id }}",
+            "score": "={{ $json.score }}",
+            "reason": "={{ $json.reason }}",
+            "payload": "={{ JSON.stringify($json.order) }}"
+          }
+        },
+        "options": {}
+      },
+      "notes": "@branch medium 動作",
+      "credentials": {
+        "postgres": {
+          "id": "stub-EqpzMrYh",
+          "name": "STUB-postgres"
+        }
+      }
+    },
+    {
+      "id": "node-pg-orders",
+      "name": "Postgres orders (low)",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1000,
+        240
+      ],
+      "parameters": {
+        "operation": "insert",
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list"
+        },
+        "table": {
+          "__rl": true,
+          "value": "orders",
+          "mode": "list"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "order_id": "={{ $json.order.order_id }}",
+            "customer_email": "={{ $json.order.customer_email }}",
+            "amount": "={{ $json.order.amount }}",
+            "risk_score": "={{ $json.score }}"
+          }
+        },
+        "options": {}
+      },
+      "notes": "@branch low 動作",
+      "credentials": {
+        "postgres": {
+          "id": "stub-Qs5lPjRC",
+          "name": "STUB-postgres"
+        }
+      }
+    },
+    {
+      "id": "node-noop-fallback",
+      "name": "NoOp Fallback (AI 自補)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        420
+      ],
+      "parameters": {},
+      "notes": "DSL v1.1 §2.4 強制：使用者未明示 fallback，AI 自動補 noOp"
+    },
+    {
+      "id": "node-set-resp-high",
+      "name": "Set status=high",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1480,
+        -160
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "x1",
+              "name": "order_id",
+              "type": "string",
+              "value": "={{ $('Set 抽 score').item.json.order.order_id }}"
+            },
+            {
+              "id": "x2",
+              "name": "status",
+              "type": "string",
+              "value": "high"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-set-resp-medium",
+      "name": "Set status=medium",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1240,
+        60
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "y1",
+              "name": "order_id",
+              "type": "string",
+              "value": "={{ $('Set 抽 score').item.json.order.order_id }}"
+            },
+            {
+              "id": "y2",
+              "name": "status",
+              "type": "string",
+              "value": "medium"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-set-resp-low",
+      "name": "Set status=low",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1240,
+        240
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "z1",
+              "name": "order_id",
+              "type": "string",
+              "value": "={{ $('Set 抽 score').item.json.order.order_id }}"
+            },
+            {
+              "id": "z2",
+              "name": "status",
+              "type": "string",
+              "value": "low"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "node-set-resp-fallback",
+      "name": "Set status=unknown (fallback)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1240,
+        420
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "w1",
+              "name": "order_id",
+              "type": "string",
+              "value": "={{ $('Set 抽 score').item.json.order.order_id }}"
+            },
+            {
+              "id": "w2",
+              "name": "status",
+              "type": "string",
+              "value": "unknown"
+            }
+          ]
+        }
+      },
+      "notes": "fallback 路徑也回應，避免 webhook 卡死"
+    },
+    {
+      "id": "node-merge",
+      "name": "Merge 四路收斂",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3,
+      "position": [
+        1720,
+        100
+      ],
+      "parameters": {
+        "mode": "append"
+      },
+      "notes": "三業務路 + 1 fallback = 4 路收斂到 respondToWebhook"
+    },
+    {
+      "id": "node-respond",
+      "name": "Respond webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1960,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "notes": "@output"
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明 (DSL v1.1)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 1400,
+        "height": 580,
+        "content": "### 🤖 AI 實作說明 — 訂單風險分流（DSL v1.1 @branch 版）\n\n**DSL v1.1 變化點**\n- 使用者用 `@branch` 嚴格語法取代 Test 5 的自然語言分流\n- AI 解析時直接從 `@branch` 提取規則 + outputKey + 動作清單，比 Test 5 容易許多\n- ⚠️ 使用者**未明示 `@branch: fallback when otherwise`**，依 DSL §2.4 規定，AI 自動補 fallback noOp 路徑\n\n**節點選型**\n- `webhook` (v2) responseMode=responseNode\n- `openAi` (langchain v1.7) jsonOutput=true 強制結構化輸出\n- `set` 抽 score：用 `$('WebhookOrder').item.json.body` 引用避免被 OpenAI 覆蓋（DSL §6.1 gotcha）\n- `switch` (v3.2) **fallbackOutput=extra**：未命中三規則的 score（如 NaN）走 fallback\n- 三業務路 + fallback noOp → 各自 Set status → Merge append → respondToWebhook\n\n**所需 Credentials**\n- [ ] OpenAI API key\n- [ ] Jira（OAuth2 或 API token，project FRAUD 須有 create issue 權限）\n- [ ] Slack OAuth2（chat:write to #fraud-alert / #ops-alert）\n- [ ] Postgres（review_queue / orders 共用同 credential）\n\n**前提假設（@assume）**\n- Postgres schema：\n  ```sql\n  CREATE TABLE review_queue (id SERIAL, order_id TEXT, score INT, reason TEXT, payload JSONB, created_at TIMESTAMP DEFAULT NOW());\n  CREATE TABLE orders (id SERIAL, order_id TEXT, customer_email TEXT, amount NUMERIC, risk_score INT, created_at TIMESTAMP DEFAULT NOW());\n  ```\n- LLM 嚴格回 JSON（jsonOutput=true 強制）；若回非數字 → 走 fallback\n\n**測試建議**\n1. 正常 amount=100 → low → orders 表新增 + 回 status=low\n2. 可疑 amount=99999 → high → Jira + Slack + 回 status=high\n3. 邊界 score=50 → medium → review_queue + 回 status=medium\n4. **NEW**：模擬 LLM 回 score=NaN → fallback noOp → 回 status=unknown（驗證 v1.1 強制 fallback）\n5. OpenAI key 改錯 → @on-error 路徑（需另建 Error Trigger workflow）\n\n**已知限制**\n- LLM 評分非確定性，建議定期校準\n- @on-error 通報需另建 Error Trigger workflow（spec three-layer.md §6 模式 B）\n- 同 order_id 多次 webhook 會重複處理（無 idempotency）\n- fallback 走 noOp 但回 status=unknown，呼叫端需處理此 status\n\n**對應使用者需求**\n- @trigger → Webhook\n- @step (AI 評分) → OpenAI\n- @branch high → Jira + Slack\n- @branch medium → Postgres review_queue\n- @branch low → Postgres orders\n- @branch fallback (AI 自補) → noOp\n- @output → Merge → respondToWebhook（四路收斂）\n- @on-error → 另建 Error Trigger workflow\n\n**v1.1 vs v1.0 對比**\n- Test 5（自然語言）：節點 14、AI 需推論分流、缺 fallback 路徑\n- Test Q3（@branch）：節點 16（多 fallback noOp + Set unknown）、解析直接、強制 fallback\n- 結論：**v1.1 換來嚴謹度，多 2 節點但安全性提升**"
+      }
+    }
+  ],
+  "connections": {
+    "WebhookOrder": {
+      "main": [
+        [
+          {
+            "node": "OpenAI 風險評分",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI 風險評分": {
+      "main": [
+        [
+          {
+            "node": "Set 抽 score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 抽 score": {
+      "main": [
+        [
+          {
+            "node": "Switch by 風險等級 (含 fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch by 風險等級 (含 fallback)": {
+      "main": [
+        [
+          {
+            "node": "Jira 開 ticket (high)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres review_queue (medium)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Postgres orders (low)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp Fallback (AI 自補)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Jira 開 ticket (high)": {
+      "main": [
+        [
+          {
+            "node": "Slack #fraud-alert (high)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack #fraud-alert (high)": {
+      "main": [
+        [
+          {
+            "node": "Set status=high",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres review_queue (medium)": {
+      "main": [
+        [
+          {
+            "node": "Set status=medium",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres orders (low)": {
+      "main": [
+        [
+          {
+            "node": "Set status=low",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NoOp Fallback (AI 自補)": {
+      "main": [
+        [
+          {
+            "node": "Set status=unknown (fallback)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set status=high": {
+      "main": [
+        [
+          {
+            "node": "Merge 四路收斂",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set status=medium": {
+      "main": [
+        [
+          {
+            "node": "Merge 四路收斂",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set status=low": {
+      "main": [
+        [
+          {
+            "node": "Merge 四路收斂",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set status=unknown (fallback)": {
+      "main": [
+        [
+          {
+            "node": "Merge 四路收斂",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge 四路收斂": {
+      "main": [
+        [
+          {
+            "node": "Respond webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "8NLkL67grqTqrvY6"
+}

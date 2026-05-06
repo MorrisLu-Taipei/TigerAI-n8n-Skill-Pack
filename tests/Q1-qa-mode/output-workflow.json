@@ -1,0 +1,318 @@
+{
+  "name": "Q1-CramSchool-Payment-Reminder",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求 (問答模式產出)",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 600,
+        "height": 280,
+        "content": "## 補習班繳費提醒\n\n@flow: 每天早上自動提醒一週內要繳費的學員\n@trigger: schedule cron \"0 9 * * *\"\n@input: Google Sheet \"補習班學員\" / 分頁 \"繳費紀錄\"\n  - A: 姓名 (string)\n  - B: 手機 (string)\n  - C: 下次繳費日 (date)\n@step: 讀取整張分頁\n@step: 過濾 下次繳費日 <= 今天+7 天\n@step: 彙總成單一訊息（每行：姓名/電話/日期）\n@output: gmail to tina@cram.com, subject \"本週繳費提醒 - {today}\"\n@on-error: gmail to tina@cram.com + retry 3"
+      }
+    },
+    {
+      "id": "node-schedule",
+      "name": "每日 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "notes": "@trigger: schedule cron 0 9 * * *"
+    },
+    {
+      "id": "node-sheet-read",
+      "name": "讀 Google Sheet",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        240,
+        100
+      ],
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "繳費紀錄",
+          "mode": "name"
+        },
+        "options": {
+          "headerRow": 1
+        }
+      },
+      "notes": "@step: 讀取整張分頁。documentId 部署時請替換",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "stub-6gtB5fA7",
+          "name": "STUB-googleSheetsOAuth2Api"
+        }
+      }
+    },
+    {
+      "id": "node-filter",
+      "name": "過濾 7 天內到期",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        480,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "f1",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              },
+              "leftValue": "={{ $json['下次繳費日'] }}",
+              "rightValue": "={{ $now.plus({days:7}).toFormat('yyyy-MM-dd') }}"
+            }
+          ]
+        }
+      },
+      "notes": "@step: 過濾 <= 今天+7 天"
+    },
+    {
+      "id": "node-aggregate",
+      "name": "彙總成清單",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        720,
+        100
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "notes": "彙總所有過濾後學員給下游組訊息"
+    },
+    {
+      "id": "node-set-msg",
+      "name": "Set 組訊息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b",
+              "name": "body",
+              "type": "string",
+              "value": "=📋 本週繳費提醒 ({{ $now.toFormat('yyyy-MM-dd') }})\n\n{{ $json.data.map(s => `- ${s['姓名']} ${s['手機']}，到期 ${s['下次繳費日']}`).join('\\n') }}\n\n共 {{ $json.data.length }} 人"
+            }
+          ]
+        }
+      },
+      "notes": "@step: 彙總成單一訊息"
+    },
+    {
+      "id": "node-if-empty",
+      "name": "IF 有人要繳",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "g1",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "leftValue": "={{ $('彙總成清單').item.json.data.length }}",
+              "rightValue": 0
+            }
+          ]
+        }
+      },
+      "notes": "彙總後如無人，不寄信"
+    },
+    {
+      "id": "node-gmail",
+      "name": "Gmail 寄送",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1440,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "tina@cram.com",
+        "subject": "=本週繳費提醒 - {{ $now.toFormat('yyyy-MM-dd') }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "notes": "@output: gmail; retry 對應 @on-error retry 3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "stub-YlRKEAxI",
+          "name": "STUB-gmailOAuth2"
+        }
+      }
+    },
+    {
+      "id": "node-noop",
+      "name": "NoOp 無人略過",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1440,
+        200
+      ],
+      "parameters": {},
+      "notes": "無人到期時的占位"
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 1300,
+        "height": 480,
+        "content": "### 🤖 AI 實作說明 — 補習班繳費提醒（問答模式產出）\n\n**節點選型**\n- `scheduleTrigger` (v1.2)：用新版而非過時 cron 節點\n- `googleSheets` (v4.5) operation=read：直接讀整張分頁\n- `filter`：日期比較用 expression dateTime/before\n- `aggregate`：把多筆學員收成單一物件，方便組訊息\n- `set` 組訊息：用 expression `array.map().join('\\n')` 組多行\n- `if` 偵測 length>0：避免無人到期時還寄空信\n- `gmail` retryOnFail=true, maxTries=3：對應 @on-error retry 3\n- `noOp`：無人時的安靜分支\n\n**所需 Credentials**\n- [ ] Google Sheets OAuth2（需 read 權限）\n- [ ] Gmail OAuth2（需 send 權限）\n\n**前提假設**\n- Google Sheet documentId 部署時要填（程式碼中 ``）\n- 欄位 header 為 中文：姓名 / 手機 / 下次繳費日（與使用者描述一致）\n- 下次繳費日格式為 yyyy-MM-dd，否則 filter 比較會失敗\n- tina@cram.com 為實際收件人\n\n**測試建議**\n1. 手動 Execute 一次驗證收信內容\n2. 在 Sheet 加一筆「下次繳費日 = 明天」測試應入清單\n3. 在 Sheet 加一筆「下次繳費日 = 30 天後」測試應被 filter 擋\n4. 清空 Sheet 後執行，應走 noOp 分支不寄信\n\n**已知限制**\n- @on-error 只覆蓋 Gmail 失敗（retry）；若 Sheet 讀取失敗目前無 fallback → 建議另建 Error Trigger workflow（見 spec/sticky-note-three-layer.md §6 模式 B）\n- 中文欄位 header 對 expression 需用 bracket 寫法 `$json['姓名']`，未來如改 schema 需同步改 expression\n- 沒有 idempotency；同一天觸發兩次會收兩封信\n\n**對應使用者需求（問答模式 5 階段）**\n- 階段 1 觸發 → @trigger → ScheduleTrigger\n- 階段 2 輸入 → @input → GoogleSheets read\n- 階段 3 步驟 (3 步) → @step × 3 → Filter / Aggregate / Set\n- 階段 4 輸出 → @output → Gmail\n- 階段 5 錯誤 → @on-error → retryOnFail + （建議）Error Trigger workflow"
+      }
+    }
+  ],
+  "connections": {
+    "每日 09:00": {
+      "main": [
+        [
+          {
+            "node": "讀 Google Sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "讀 Google Sheet": {
+      "main": [
+        [
+          {
+            "node": "過濾 7 天內到期",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "過濾 7 天內到期": {
+      "main": [
+        [
+          {
+            "node": "彙總成清單",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "彙總成清單": {
+      "main": [
+        [
+          {
+            "node": "Set 組訊息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 組訊息": {
+      "main": [
+        [
+          {
+            "node": "IF 有人要繳",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF 有人要繳": {
+      "main": [
+        [
+          {
+            "node": "Gmail 寄送",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "NoOp 無人略過",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "FVpbu20UF20Ynvga"
+}

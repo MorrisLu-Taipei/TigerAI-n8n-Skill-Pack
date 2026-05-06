@@ -1,0 +1,344 @@
+{
+  "name": "Test2-HN-Daily-AI-Summary",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 600,
+        "height": 240,
+        "content": "## 需求：HN 每日 AI 摘要\n\n@flow: 每天早上抓 Hacker News，AI 摘要前 10 篇，寄信給 PM\n@trigger: schedule cron \"0 9 * * *\"\n@step: 抓 RSS https://news.ycombinator.com/rss\n@step: 只留前 10 篇\n@step: 每篇用 OpenAI gpt-4o-mini 產 50 字中文摘要\n@step: 套 HTML 模板\n@output: gmail to pm@example.com\n@on-error: slack #ops"
+      }
+    },
+    {
+      "id": "node-schedule",
+      "name": "Schedule 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * *"
+            }
+          ]
+        }
+      },
+      "notes": "@trigger: schedule cron 0 9 * * *"
+    },
+    {
+      "id": "node-rss",
+      "name": "RSS Feed Read",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        100
+      ],
+      "parameters": {
+        "url": "https://news.ycombinator.com/rss",
+        "options": {}
+      },
+      "notes": "@step: 抓 RSS"
+    },
+    {
+      "id": "node-limit",
+      "name": "Limit 10",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        440,
+        100
+      ],
+      "parameters": {
+        "maxItems": 10
+      },
+      "notes": "@step: 只留前 10 篇"
+    },
+    {
+      "id": "node-loop",
+      "name": "Loop Items",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        660,
+        100
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "逐筆送 OpenAI"
+    },
+    {
+      "id": "node-openai",
+      "name": "OpenAI 摘要",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.7,
+      "position": [
+        880,
+        100
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "你是新聞摘要機，只回 50 字中文摘要，不要前綴。"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.title }}\n\n{{ $json.contentSnippet || '' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "notes": "@step: AI 摘要",
+      "credentials": {
+        "openAiApi": {
+          "id": "stub-JWjKslvB",
+          "name": "STUB-openAiApi"
+        }
+      }
+    },
+    {
+      "id": "node-set-row",
+      "name": "Set 單筆欄位",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "t",
+              "name": "title",
+              "type": "string",
+              "value": "={{ $('Loop Items').item.json.title }}"
+            },
+            {
+              "id": "u",
+              "name": "link",
+              "type": "string",
+              "value": "={{ $('Loop Items').item.json.link }}"
+            },
+            {
+              "id": "s",
+              "name": "summary",
+              "type": "string",
+              "value": "={{ $json.message.content }}"
+            }
+          ]
+        }
+      },
+      "notes": "對齊 title/link/summary 三欄"
+    },
+    {
+      "id": "node-aggregate",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1320,
+        100
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "notes": "收集 10 筆摘要"
+    },
+    {
+      "id": "node-html",
+      "name": "Set HTML",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1540,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "h",
+              "name": "html",
+              "type": "string",
+              "value": "=<h2>HN Daily {{ $now.toFormat('yyyy-MM-dd') }}</h2><ul>{{ $json.data.map(i => `<li><a href=\"${i.link}\">${i.title}</a><br/>${i.summary}</li>`).join('') }}</ul>"
+            }
+          ]
+        }
+      },
+      "notes": "@step: 套 HTML 模板"
+    },
+    {
+      "id": "node-gmail",
+      "name": "Gmail 寄送",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1760,
+        100
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "pm@example.com",
+        "subject": "=HN Daily {{ $now.toFormat('yyyy-MM-dd') }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "notes": "@output: gmail",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "stub-uQ5SvkfM",
+          "name": "STUB-gmailOAuth2"
+        }
+      }
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 1000,
+        "height": 420,
+        "content": "### 🤖 AI 實作說明 — HN 每日 AI 摘要\n\n**節點選型**\n- `scheduleTrigger` (v1.2)：使用新版而非已過時的 `cron`\n- `rssFeedRead`：原生節點，免自寫 XML 解析\n- `limit` + `splitInBatches`：先截 10 筆再逐筆送 OpenAI，避免 batch token 爆量\n- `openAi` (langchain)：chat 模式 + 嚴格 system prompt\n- `aggregate` (mode=aggregateAllItemData)：把 loop 後 10 筆收成一筆 JSON\n- `set` 兩次：第一次對齊欄位、第二次組 HTML\n- `gmail`：emailType=html\n\n**所需 Credentials**\n- [ ] OpenAI API key（gpt-4o-mini 約 $0.0001/篇 × 10 = $0.001/天）\n- [ ] Gmail OAuth2\n- [ ] Slack OAuth2（@on-error 用，需另建 Error Trigger workflow）\n\n**前提假設**\n- HN RSS feed 穩定可達；如不穩請加 retry\n- LLM 嚴格回 50 字（system prompt 已約束，但仍可能 hallucinate）\n- pm@example.com 為實際收件人\n\n**測試建議**\n1. 手動 Execute Workflow，驗證收信 + HTML 正確渲染\n2. 把 limit 改 1 試 token 用量\n3. 模擬 RSS 失敗（改錯 URL）→ 應走 @on-error\n\n**已知限制**\n- 未做 OpenAI 失敗 retry（10 篇逐筆，1 篇失敗會丟整批）\n- HN snippet 可能為空（已用 || '' fallback）\n- @on-error 路徑需另建 Error Trigger workflow（n8n 慣例，不能放本 workflow 內）\n\n**對應使用者需求**\n- @trigger → Schedule\n- @step (RSS / 限 10 / AI / HTML) → 對應 5 節點\n- @output → Gmail\n- @on-error → 需另建 Error Trigger workflow（已在限制中說明）"
+      }
+    }
+  ],
+  "connections": {
+    "Schedule 09:00": {
+      "main": [
+        [
+          {
+            "node": "RSS Feed Read",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RSS Feed Read": {
+      "main": [
+        [
+          {
+            "node": "Limit 10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit 10": {
+      "main": [
+        [
+          {
+            "node": "Loop Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Items": {
+      "main": [
+        [
+          {
+            "node": "OpenAI 摘要",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI 摘要": {
+      "main": [
+        [
+          {
+            "node": "Set 單筆欄位",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 單筆欄位": {
+      "main": [
+        [
+          {
+            "node": "Loop Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Set HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set HTML": {
+      "main": [
+        [
+          {
+            "node": "Gmail 寄送",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "Aqr0jwHBgExcvKM2"
+}

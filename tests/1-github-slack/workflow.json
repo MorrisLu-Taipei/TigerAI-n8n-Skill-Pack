@@ -1,0 +1,136 @@
+{
+  "name": "Test1-GitHub-Issue-to-Slack",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 520,
+        "height": 220,
+        "content": "## 需求：GitHub Issue 通知到 Slack\n\n@trigger: webhook POST /github-issue\n@input: GitHub Issue webhook payload (title, html_url, user.login)\n@step: 取出 title / url / 作者\n@step: 組成訊息 \"🐛 新 Issue: {title} by {作者} → {url}\"\n@output: slack channel #dev-issues\n@on-error: 寫入 console（暫時不通知）"
+      }
+    },
+    {
+      "id": "node-webhook",
+      "name": "WebhookGitHubIssue",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "github-issue",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "notes": "對應 @trigger: webhook POST /github-issue",
+      "webhookId": "762e7eff-9929-4da0-8791-0325b524a0cb"
+    },
+    {
+      "id": "node-set",
+      "name": "Set 組訊息",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        260,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "text",
+              "type": "string",
+              "value": "=🐛 新 Issue: {{ $json.body.title }} by {{ $json.body.user.login }} → {{ $json.body.html_url }}"
+            }
+          ]
+        }
+      },
+      "notes": "對應 @step (組訊息)"
+    },
+    {
+      "id": "node-slack",
+      "name": "Slack 發送",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        100
+      ],
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "#dev-issues",
+          "mode": "name"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {}
+      },
+      "continueOnFail": true,
+      "notes": "對應 @output, continueOnFail=true 對應 @on-error 不阻斷",
+      "credentials": {
+        "slackApi": {
+          "id": "stub-zrhSiPOt",
+          "name": "STUB-slackApi"
+        }
+      }
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 780,
+        "height": 360,
+        "content": "### 🤖 AI 實作說明 — GitHub Issue → Slack\n\n**節點選型**\n- `webhook` (v2)：標準 POST trigger，比 IMAP/Form 更適合機器對機器\n- `set` (v3.4)：用 expression 組字串，比 code 節點更輕量\n- `slack` (v2.2)：原生節點，自動處理 OAuth\n\n**所需 Credentials**\n- [ ] Slack OAuth2（需 chat:write 權限）\n\n**前提假設**\n- GitHub webhook 已設定，secret 暫不驗證\n- channel #dev-issues 已存在且 bot 已加入\n- Webhook payload 在 `$json.body` 之下（n8n 慣例）\n\n**測試建議**\n1. `curl -X POST <n8n-url>/webhook/github-issue -H 'Content-Type: application/json' -d '{\"title\":\"test\",\"html_url\":\"http://x\",\"user\":{\"login\":\"me\"}}'`\n2. 驗證 #dev-issues 收到訊息\n\n**已知限制**\n- 未驗證 GitHub webhook secret（資安風險）\n- 未做 retry，Slack 暫時失敗會丟訊息（continueOnFail 會吞錯）\n\n**對應使用者需求**\n- @trigger → Webhook\n- @step (組訊息) → Set\n- @output → Slack\n- @on-error (寫入 console) → 改用 continueOnFail（n8n 無原生 console；如需可加 NoOp 並查 execution log）"
+      }
+    }
+  ],
+  "connections": {
+    "WebhookGitHubIssue": {
+      "main": [
+        [
+          {
+            "node": "Set 組訊息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 組訊息": {
+      "main": [
+        [
+          {
+            "node": "Slack 發送",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "xwzAJYDpEvigJVsM"
+}

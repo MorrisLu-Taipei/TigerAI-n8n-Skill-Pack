@@ -1,0 +1,230 @@
+{
+  "name": "Test3-Telegram-AI-Bot",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -260
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 540,
+        "height": 220,
+        "content": "## 需求：Telegram AI 助手 bot\n\n@trigger: telegram bot 收到訊息\n@input: { message.text, message.chat.id, message.from.first_name }\n@step: 用 OpenAI gpt-4o-mini 產生回覆（system: 你是友善的中文助理，2 句內回答）\n@step: 回傳到原 Telegram 對話 (chat_id)\n@on-error: telegram 回「抱歉，我暫時無法回應」"
+      }
+    },
+    {
+      "id": "node-tg-trigger",
+      "name": "TelegramTrigger",
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "notes": "@trigger: telegram bot 收訊",
+      "webhookId": "8d6dbb41-253b-4922-b0c4-6caf8a6c6ec5",
+      "credentials": {
+        "telegramApi": {
+          "id": "stub-u8fIw5R5",
+          "name": "STUB-telegramApi"
+        }
+      }
+    },
+    {
+      "id": "node-openai",
+      "name": "OpenAI 回覆",
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.7,
+      "position": [
+        260,
+        100
+      ],
+      "parameters": {
+        "resource": "text",
+        "operation": "message",
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list"
+        },
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "你是友善的中文助理。回答必須在 2 句內。語氣親切。"
+            },
+            {
+              "role": "user",
+              "content": "={{ $json.message.text }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "continueOnFail": true,
+      "notes": "@step: OpenAI 摘要; continueOnFail 對應 @on-error",
+      "credentials": {
+        "openAiApi": {
+          "id": "stub-cB8ANDom",
+          "name": "STUB-openAiApi"
+        }
+      }
+    },
+    {
+      "id": "node-if-error",
+      "name": "IF AI 失敗?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        520,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "strict"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c1",
+              "operator": {
+                "type": "object",
+                "operation": "exists"
+              },
+              "leftValue": "={{ $json.error }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "notes": "判斷 OpenAI 是否失敗"
+    },
+    {
+      "id": "node-tg-fallback",
+      "name": "Telegram 回 Fallback",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('TelegramTrigger').item.json.message.chat.id }}",
+        "text": "抱歉，我暫時無法回應，請稍後再試 🙇",
+        "additionalFields": {}
+      },
+      "notes": "@on-error 路徑",
+      "credentials": {
+        "telegramApi": {
+          "id": "stub-N9ygDvOd",
+          "name": "STUB-telegramApi"
+        }
+      }
+    },
+    {
+      "id": "node-tg-reply",
+      "name": "Telegram 回 AI 訊息",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        780,
+        200
+      ],
+      "parameters": {
+        "resource": "message",
+        "operation": "sendMessage",
+        "chatId": "={{ $('TelegramTrigger').item.json.message.chat.id }}",
+        "text": "={{ $json.message.content }}",
+        "additionalFields": {}
+      },
+      "notes": "@step: 回傳到原對話, chat_id 從 trigger 引用",
+      "credentials": {
+        "telegramApi": {
+          "id": "stub-BL0P9Vsa",
+          "name": "STUB-telegramApi"
+        }
+      }
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 980,
+        "height": 400,
+        "content": "### 🤖 AI 實作說明 — Telegram AI Bot\n\n**節點選型**\n- `telegramTrigger`：原生節點，免自寫 webhook 解析；自動處理 long polling / webhook mode\n- `openAi` (langchain v1.7)：chat 模式 + system prompt 限制 2 句\n- `if` 偵測 `$json.error`：搭配 OpenAI 的 `continueOnFail=true`，把錯誤分流\n- 兩個 `telegram` 節點分對 fallback / 正常回覆，皆引用 `$('TelegramTrigger').item.json.message.chat.id`\n\n**所需 Credentials**\n- [ ] Telegram Bot API（需先用 BotFather 建 bot 取得 token）\n- [ ] OpenAI API key\n\n**前提假設**\n- bot 只處理 text 訊息；圖片/語音會壞（input 引用 `message.text`）\n- 對話不需上下文記憶（每則獨立呼叫 LLM）；如需 memory 改用 `agent` 節點\n- chat_id 從 trigger 引用而非 `$json`，避免被 OpenAI 節點覆蓋（DSL §6 同款 gotcha）\n\n**測試建議**\n1. BotFather 建測試 bot，傳「你好」→ 應收到 2 句以內回應\n2. 把 OpenAI key 改錯 → 應收到 fallback 訊息\n3. 傳貼圖 → 預期失敗（已知限制）\n\n**已知限制**\n- 不支援多媒體（text only）\n- 無對話記憶（連續問答 LLM 不記得前文）\n- 無 rate limit；惡意使用者可大量觸發 OpenAI 計費\n- @on-error 透過 continueOnFail+if 實作，並非 Error Trigger workflow\n\n**對應使用者需求**\n- @trigger → Telegram Trigger\n- @step (AI) → OpenAI\n- @step (回傳) → Telegram (主路徑)\n- @on-error → Telegram (fallback 路徑) + IF 分流"
+      }
+    }
+  ],
+  "connections": {
+    "TelegramTrigger": {
+      "main": [
+        [
+          {
+            "node": "OpenAI 回覆",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI 回覆": {
+      "main": [
+        [
+          {
+            "node": "IF AI 失敗?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF AI 失敗?": {
+      "main": [
+        [
+          {
+            "node": "Telegram 回 Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Telegram 回 AI 訊息",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "kGoFDRATm4IImfKU"
+}

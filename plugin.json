@@ -1,0 +1,57 @@
+{
+  "name": "tigerai-n8n-skill-pack",
+  "version": "0.17.0",
+  "description": "TigerAI n8n Skill Pack — Sticky-Note-driven workflow generation with three-layer structure, 8-pattern cookbook, 2,061 reference workflows, and three usage modes (cookbook copy / Q&A / example finder). Pure REST API, no MCP dependency.",
+  "author": "TigerAI",
+  "license": "Proprietary (vendor skills under MIT — see skills/_vendor/LICENSE)",
+  "skills": [
+    { "path": "skills/_vendor/n8n-expression-syntax", "source": "vendor" },
+    { "path": "skills/_vendor/n8n-workflow-patterns", "source": "vendor" },
+    { "path": "skills/_vendor/n8n-validation-expert", "source": "vendor" },
+    { "path": "skills/_vendor/n8n-node-configuration", "source": "vendor" },
+    { "path": "skills/_vendor/n8n-code-javascript", "source": "vendor" },
+    { "path": "skills/_vendor/n8n-code-python", "source": "vendor" },
+    { "path": "skills/tigerai/sticky-note-to-workflow", "source": "tigerai", "role": "core-executor" },
+    { "path": "skills/tigerai/n8n-api-bridge", "source": "tigerai", "role": "io" },
+    { "path": "skills/tigerai/tigerai-enterprise-patterns", "source": "tigerai", "role": "enterprise" },
+    { "path": "skills/tigerai/tigerai-qa-mode", "source": "tigerai", "role": "interaction" },
+    { "path": "skills/tigerai/tigerai-example-finder", "source": "tigerai", "role": "interaction" },
+    { "path": "skills/tigerai/install-tigerai-n8n-pack", "source": "tigerai", "role": "maintenance" }
+  ],
+  "shared_resources": {
+    "spec": "spec/",
+    "cookbook": "cookbook/",
+    "research": "research/",
+    "reference_workflows": "reference-workflows/",
+    "usage_modes_guide": "02-USAGE-MODES.md",
+    "first_workflow_tutorial": "03-FIRST-WORKFLOW.md",
+    "faq": "04-FAQ.md"
+  },
+  "requires": {
+    "claude_code": ">=1.0.0",
+    "antigravity": ">=1.0.0",
+    "n8n_instance": ">=1.0.0 (REST API enabled)"
+  },
+  "env_vars": {
+    "N8N_API_URL": { "required": true, "description": "n8n REST API base URL (no trailing slash)" },
+    "N8N_API_KEY": { "required": true, "description": "n8n API key from Settings → API" }
+  },
+  "install_scripts": {
+    "linux_macos_wsl": "install.sh",
+    "windows": "install.ps1"
+  },
+  "entry_points": {
+    "default": "tigerai-qa-mode",
+    "modes": {
+      "cookbook_copy": "Direct paste from cookbook/ into n8n; no skill activation needed",
+      "qa": "tigerai-qa-mode → sticky-note-to-workflow",
+      "example_finder": "tigerai-example-finder → optional sticky-note-to-workflow"
+    }
+  },
+  "verified_against": {
+    "n8n_version": "2.10.3",
+    "tested_workflows": 8,
+    "test_pass_rate": "8/8 JSON, 8/8 import, 7/8 activate, 4/4 webhook routing",
+    "report": "tests/REPORT-3.md"
+  }
+}

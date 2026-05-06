@@ -1,0 +1,22 @@
+{
+  "name": "Starter - Blank Sticky",
+  "nodes": [
+    {
+      "id": "sticky-user-blank",
+      "name": "Layer1 使用者需求 / User Intent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -200],
+      "parameters": {
+        "color": 4,
+        "width": 600,
+        "height": 240,
+        "content": ""
+      }
+    }
+  ],
+  "connections": {},
+  "settings": { "executionOrder": "v1" },
+  "tags": [],
+  "id": "starter-blank-001"
+}

@@ -1,0 +1,22 @@
+{
+  "name": "Starter - Template Sticky (Bilingual)",
+  "nodes": [
+    {
+      "id": "sticky-user-template",
+      "name": "Layer1 使用者需求 / User Intent",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [0, -260],
+      "parameters": {
+        "color": 4,
+        "width": 720,
+        "height": 480,
+        "content": "## 寫你的需求 / Describe your need\n\n（中文範例 / Chinese example）\n每天早上 9 點抓銷售資料寄日報給老闆。失敗就在 Slack #ops 通知。\n\n（English example）\nEvery day at 9 AM fetch sales data and email a daily report to my boss. On failure, notify Slack #ops.\n\n---\n\n## 不會描述？照下方填空 / Not sure how? Fill in the blanks\n\n**什麼時候跑 / When to run:** \n（例：每天 9 點 / 收到 webhook / 使用者填表單）\n（e.g. every day at 9 AM / on webhook / form submission）\n\n**要做什麼 / What to do:**\n  1. \n  2. \n  3. \n\n**結果送到哪 / Where the result goes:** \n（例：寄到 boss@x.com / 通知 Slack #ops / 寫入 Postgres）\n（e.g. email boss@x.com / notify Slack #ops / write to Postgres）\n\n**失敗怎辦 / On failure:** \n（例：忽略 / 通知 #ops / 重試 3 次）\n（e.g. ignore / notify #ops / retry 3 times）\n\n---\n\n💡 寫完後對 AI 說「依此便利貼產 workflow」 / When done, ask AI: \"build the workflow from this sticky\""
+      }
+    }
+  ],
+  "connections": {},
+  "settings": { "executionOrder": "v1" },
+  "tags": [],
+  "id": "starter-template-001"
+}

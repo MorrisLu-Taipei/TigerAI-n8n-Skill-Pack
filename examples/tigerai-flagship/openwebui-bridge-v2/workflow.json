@@ -1,0 +1,129 @@
+{
+    "name": "OpenWebUI-Webhook-Bridge-v2",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "openwebui-chat",
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 2,
+            "position": [
+                0,
+                0
+            ],
+            "id": "8b5f3a0a-1e6a-4d4b-9e5c-7b4a2f1e2d3c",
+            "name": "WebUI Webhook"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 1.7,
+            "position": [
+                220,
+                0
+            ],
+            "id": "c1a2b3c4-d5e6-4f7g-8h9i-j0k1l2m3n4o5",
+            "name": "AI Agent"
+        },
+        {
+            "parameters": {
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1,
+            "position": [
+                180,
+                200
+            ],
+            "id": "o1p2q3r4-s5t6-4u7v-8w9x-y0z1a2b3c4d5",
+            "name": "OpenAI Chat Model"
+        },
+        {
+            "parameters": {
+                "contextWindow": 10
+            },
+            "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+            "typeVersion": 1.3,
+            "position": [
+                400,
+                200
+            ],
+            "id": "m1n2o3p4-q5r6-4s7t-8u9v-w0x1y2z3a4b5",
+            "name": "Window Buffer Memory"
+        },
+        {
+            "parameters": {
+                "respondWith": "text",
+                "responseBody": "={{ $json.output }}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                500,
+                0
+            ],
+            "id": "r1e2s3p4-o5n6-4s7e-8w9e-b0h1o2o3k4n5",
+            "name": "Respond to Webhook"
+        }
+    ],
+    "connections": {
+        "WebUI Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Window Buffer Memory": {
+            "ai_memory": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_memory",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "meta": {
+        "instanceId": "tigerai-dev"
+    },
+    "tags": []
+}

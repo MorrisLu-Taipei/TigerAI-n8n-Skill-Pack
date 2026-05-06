@@ -1,0 +1,190 @@
+{
+    "name": "splitMP3-API-Orchestrated",
+    "nodes": [
+        {
+            "parameters": {
+                "formTitle": "Universal MP3 Splitter (API Power)",
+                "formDescription": "Communication via HTTP API. Location transparent.",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "Upload MP3",
+                            "fieldType": "file",
+                            "requiredField": true
+                        },
+                        {
+                            "fieldLabel": "Segment Minutes",
+                            "defaultValue": 20,
+                            "fieldType": "number"
+                        }
+                    ]
+                },
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2,
+            "position": [
+                0,
+                0
+            ],
+            "id": "form-trigger",
+            "name": "Form Trigger"
+        },
+        {
+            "parameters": {
+                "fileName": "=/home/node/.n8n-files/splitMP3/input/{{ $binary.data.fileName }}",
+                "options": {
+                    "append": false
+                }
+            },
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                220,
+                0
+            ],
+            "id": "write-input",
+            "name": "Save Source MP3"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=http://host.docker.internal:8000/split/info",
+                "sendBody": true,
+                "bodyParameters": {
+                    "parameters": [
+                        {
+                            "name": "input",
+                            "value": "=/mnt/c/Tools/@@@@@@Antigravity/n8n-projects/n8n-mcp-json/splitePDF/input/{{ $binary.data.fileName }}"
+                        }
+                    ]
+                },
+                "options": {
+                    "timeout": 300000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                440,
+                0
+            ],
+            "id": "api-get-info",
+            "name": "API: Get Info"
+        },
+        {
+            "parameters": {
+                "jsCode": "const info = $input.first().json;\nconst segmentMin = $node[\"Form Trigger\"].json[\"Segment Minutes\"] || 20;\nconst segmentMs = segmentMin * 60 * 1000;\nconst totalMs = info.duration_ms;\nconst numParts = Math.ceil(totalMs / segmentMs);\n\nconst tasks = [];\nfor (let i = 0; i < numParts; i++) {\n  tasks.push({\n    json: {\n      part: i + 1,\n      start: i * segmentMs,\n      end: Math.min((i + 1) * segmentMs, totalMs),\n      sourcePath: `/mnt/c/Tools/@@@@@@Antigravity/n8n-projects/n8n-mcp-json/splitePDF/input/${info.filename}`,\n      originalName: info.filename.split('.')[0]\n    }\n  });\n}\nreturn tasks;"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                660,
+                0
+            ],
+            "id": "calc-segments",
+            "name": "Generate Tasks"
+        },
+        {
+            "parameters": {
+                "method": "POST",
+                "url": "=http://host.docker.internal:8000/split/mp3",
+                "sendBody": true,
+                "specifyBody": "json",
+                "jsonBody": "={\n  \"input_path\": \"{{ $json.sourcePath }}\",\n  \"output_path\": \"/mnt/c/Tools/@@@@@@Antigravity/n8n-projects/n8n-mcp-json/splitePDF/output/{{ $json.originalName }}/{{ $json.originalName }}_Part_{{ $json.part }}.mp3\",\n  \"start\": {{ $json.start }},\n  \"end\": {{ $json.end }},\n  \"title\": \"{{ $json.originalName }} (Part {{ $json.part }})\"\n}",
+                "options": {
+                    "timeout": 300000
+                }
+            },
+            "type": "n8n-nodes-base.httpRequest",
+            "typeVersion": 4.2,
+            "position": [
+                880,
+                0
+            ],
+            "id": "api-split",
+            "name": "API: Atomic Split"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"status\": \"success\",\n  \"total_processed\": {{ $input.all().length }},\n  \"message\": \"All segments processed via Worker API!\"\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                1100,
+                0
+            ],
+            "id": "done",
+            "name": "Final Respond"
+        }
+    ],
+    "connections": {
+        "Form Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Save Source MP3",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save Source MP3": {
+            "main": [
+                [
+                    {
+                        "node": "API: Get Info",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "API: Get Info": {
+            "main": [
+                [
+                    {
+                        "node": "Generate Tasks",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Generate Tasks": {
+            "main": [
+                [
+                    {
+                        "node": "API: Atomic Split",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "API: Atomic Split": {
+            "main": [
+                [
+                    {
+                        "node": "Final Respond",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "meta": {
+        "instanceId": "tigerai-dev"
+    },
+    "tags": []
+}

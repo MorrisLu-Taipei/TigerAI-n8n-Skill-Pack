@@ -1,0 +1,177 @@
+{
+    "name": "splitPDF-Orchestrated",
+    "nodes": [
+        {
+            "parameters": {
+                "formTitle": "Orchestrated PDF Splitter",
+                "formDescription": "Upload PDF and define your naming rule.",
+                "formFields": {
+                    "values": [
+                        {
+                            "fieldLabel": "Upload PDF",
+                            "fieldType": "file",
+                            "requiredField": true
+                        }
+                    ]
+                },
+                "responseMode": "responseNode",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.formTrigger",
+            "typeVersion": 2,
+            "position": [
+                0,
+                0
+            ],
+            "id": "form-trigger",
+            "name": "Form Trigger"
+        },
+        {
+            "parameters": {
+                "fileName": "=/home/node/.n8n-files/splitePDF/input/{{ $binary.data.fileName }}",
+                "options": {
+                    "append": false
+                }
+            },
+            "type": "n8n-nodes-base.writeBinaryFile",
+            "typeVersion": 1,
+            "position": [
+                220,
+                0
+            ],
+            "id": "write-input",
+            "name": "Save Input File"
+        },
+        {
+            "parameters": {
+                "jsCode": "const { execSync } = require('child_process');\nconst filePath = $input.first().json.file;\nconst cmd = `python3 -c \"import fitz, json; doc = fitz.open('${filePath}'); print(json.dumps([{'title': e[1], 'page': e[2]} for e in doc.get_toc() if e[0] == 1]))\"`;\nconst toc = JSON.parse(execSync(cmd).toString());\nreturn toc.map(chapter => ({ json: { ...chapter, sourceFile: filePath, originalName: $binary.data.fileName } }));"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                440,
+                0
+            ],
+            "id": "get-toc",
+            "name": "Read TOC"
+        },
+        {
+            "parameters": {
+                "values": {
+                    "string": [
+                        {
+                            "name": "namingRule",
+                            "value": "={{ $itemIndex + 1 }}_{{ $json.title.toLowerCase().replace(/\\s+/g, '_') }}.pdf"
+                        },
+                        {
+                            "name": "targetFolder",
+                            "value": "={{ $json.originalName.split('.')[0] }}_split"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.2,
+            "position": [
+                660,
+                0
+            ],
+            "id": "set-naming",
+            "name": "Set Naming Rule"
+        },
+        {
+            "parameters": {
+                "jsCode": "const { execSync } = require('child_process');\nconst { sourceFile, title, page, targetFolder, namingRule } = $json;\nconst itemIndex = $itemIndex;\nconst outputPath = `/home/node/.n8n-files/splitePDF/output/${targetFolder}/${namingRule}`;\n\nconst cmd = `python3 /home/node/.n8n-files/splitePDF/single_split.py --input \"${sourceFile}\" --title \"${title}\" --page ${page} --index ${itemIndex} --output-path \"${outputPath}\"`;\nconst stdout = execSync(cmd).toString();\n\nreturn { \n  status: 'success', \n  savedAs: outputPath,\n  chapter: title\n};"
+            },
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                880,
+                0
+            ],
+            "id": "atomic-split",
+            "name": "Atomic Split & Write"
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={\n  \"status\": \"completed\",\n  \"files_created\": {{ $input.all().length }}\n}",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1.1,
+            "position": [
+                1100,
+                0
+            ],
+            "id": "respond",
+            "name": "Final Response"
+        }
+    ],
+    "connections": {
+        "Form Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Save Input File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save Input File": {
+            "main": [
+                [
+                    {
+                        "node": "Read TOC",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Read TOC": {
+            "main": [
+                [
+                    {
+                        "node": "Set Naming Rule",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Set Naming Rule": {
+            "main": [
+                [
+                    {
+                        "node": "Atomic Split & Write",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Atomic Split & Write": {
+            "main": [
+                [
+                    {
+                        "node": "Final Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "meta": {
+        "instanceId": "tigerai-dev"
+    },
+    "tags": []
+}

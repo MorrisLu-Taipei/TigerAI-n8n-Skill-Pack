@@ -1,0 +1,319 @@
+{
+  "name": "Test4-PDF-Worker-S3-Orchestrated",
+  "nodes": [
+    {
+      "id": "sticky-user-1",
+      "name": "Layer1 使用者需求",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -300
+      ],
+      "parameters": {
+        "color": 4,
+        "width": 700,
+        "height": 280,
+        "content": "## 需求：合約 PDF 章節切分上傳 S3\n\n@flow: 上傳 PDF → 呼叫 Worker 切章節 → 逐章節上傳 S3\n@trigger: form\n@form-fields:\n  - file: \"上傳合約 PDF\" (file, required)\n  - prefix: \"命名前綴\" (text, default: \"contract\")\n@step: 存暫存到 /tmp/{execution_id}/input.pdf\n@step: 呼叫 FastAPI Worker POST http://worker:8000/split-pdf\n@step: 對每個章節 (loop): 命名 + 上傳 S3\n@output: form 顯示處理結果\n@on-error: 清理 /tmp，回錯誤\n@assume: Worker 與 n8n 共用 /tmp volume"
+      }
+    },
+    {
+      "id": "node-form",
+      "name": "FormTrigger",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        100
+      ],
+      "parameters": {
+        "formTitle": "合約 PDF 章節切分",
+        "formDescription": "上傳合約並指定命名前綴",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "上傳合約 PDF",
+              "fieldType": "file",
+              "requiredField": true,
+              "acceptFileTypes": ".pdf"
+            },
+            {
+              "fieldLabel": "命名前綴",
+              "fieldType": "text",
+              "requiredField": false
+            }
+          ]
+        },
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "notes": "@trigger: form, @form-fields",
+      "webhookId": "22b00533-49e3-4195-b339-e2fcd1a6b403"
+    },
+    {
+      "id": "node-write-tmp",
+      "name": "存暫存 PDF",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        240,
+        100
+      ],
+      "parameters": {
+        "operation": "write",
+        "fileName": "=/tmp/{{ $execution.id }}/input.pdf",
+        "options": {}
+      },
+      "notes": "@step: 存暫存"
+    },
+    {
+      "id": "node-worker",
+      "name": "FastAPI Worker 切章節",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        100
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "http://worker:8000/split-pdf",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"file_path\": \"/tmp/{{ $execution.id }}/input.pdf\", \"prefix\": \"{{ $('FormTrigger').item.json.prefix || 'contract' }}\" }",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "notes": "@step: 呼叫 Worker, 預期回 { chapters: [{title,page,output_path}] }"
+    },
+    {
+      "id": "node-split-out",
+      "name": "Split 章節陣列",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        720,
+        100
+      ],
+      "parameters": {
+        "fieldToSplitOut": "chapters",
+        "options": {}
+      },
+      "notes": "Worker 回 array → 拆單筆"
+    },
+    {
+      "id": "node-loop",
+      "name": "Loop 章節 (batchSize=1 透明度)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        960,
+        100
+      ],
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "notes": "TigerAI 原子化：batchSize=1 讓畫面每章節執行皆可見"
+    },
+    {
+      "id": "node-name",
+      "name": "Set 命名規則",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        100
+      ],
+      "parameters": {
+        "options": {},
+        "assignments": {
+          "assignments": [
+            {
+              "id": "k",
+              "name": "s3Key",
+              "type": "string",
+              "value": "=pdfs/{{ $('FormTrigger').item.json.prefix || 'contract' }}_{{ String($itemIndex + 1).padStart(3, '0') }}_{{ $json.title }}.pdf"
+            }
+          ]
+        }
+      },
+      "notes": "@step: 命名規則，序號 zero-padded"
+    },
+    {
+      "id": "node-s3",
+      "name": "S3 上傳",
+      "type": "n8n-nodes-base.awsS3",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        100
+      ],
+      "parameters": {
+        "operation": "upload",
+        "bucketName": "legal-contracts",
+        "fileName": "={{ $json.s3Key }}",
+        "binaryData": false,
+        "fileContent": "={{ $json.output_path }}",
+        "additionalFields": {}
+      },
+      "notes": "@step: 上傳 S3 bucket=legal-contracts",
+      "credentials": {
+        "aws": {
+          "id": "stub-3f6gk1Wf",
+          "name": "STUB-aws"
+        }
+      }
+    },
+    {
+      "id": "node-aggregate",
+      "name": "Aggregate S3 keys",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        100
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "notes": "收集所有 S3 keys 給 Form 回應"
+    },
+    {
+      "id": "node-respond",
+      "name": "Respond to Form",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        100
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"processed\": {{ $json.data.length }}, \"keys\": {{ JSON.stringify($json.data.map(d=>d.s3Key)) }} }",
+        "options": {}
+      },
+      "notes": "@output: 回顯處理章節數與 S3 keys"
+    },
+    {
+      "id": "sticky-ai-1",
+      "name": "Layer3 AI 實作說明",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        700
+      ],
+      "parameters": {
+        "color": 5,
+        "width": 1100,
+        "height": 460,
+        "content": "### 🤖 AI 實作說明 — PDF Worker S3 (TigerAI 原子化模式)\n\n**節點選型（遵循 TigerAI 旗艦模式）**\n- `formTrigger` (v2.2)：accept .pdf only，responseMode=responseNode 配 respondToWebhook\n- `readWriteFile` operation=write：把 form 上傳的 binary 落地到 /tmp\n- `httpRequest` (v4.2)：呼叫 FastAPI Worker，timeout 5 分鐘（大檔可能慢）\n- `splitOut` + `splitInBatches batchSize=1`：實現 loop 級透明度（每章節一次執行可見）— TigerAI 原子化精神\n- `set` 命名規則：序號 padStart(3,'0') 對齊 cookbook 05\n- `awsS3` (v2)：upload\n- `aggregate` + `respondToWebhook`：彙總後回 form\n\n**所需 Credentials**\n- [ ] AWS S3 credential（key/secret 或 IAM role）\n- Worker URL 走內網不需 credential；如走公網需加 Header Auth\n\n**前提假設（含使用者 @assume）**\n- FastAPI Worker `worker:8000` 已部署可達\n- Worker 介面：POST `/split-pdf` body `{file_path, prefix}`，回 `{chapters:[{title,page,output_path}]}`\n- /tmp 為 n8n 與 worker 共用 volume mount（使用者明示 @assume）\n- S3 bucket `legal-contracts` 已建立\n\n**測試建議**\n1. 上傳 3 章節 PDF → S3 應出現 3 檔，命名格式 `pdfs/contract_001_序章.pdf` 等\n2. 上傳非 PDF → form accept filter 應拒絕\n3. Worker 服務停掉 → HTTP timeout 後走 @on-error\n\n**已知限制**\n- /tmp 未做主動清理（依 container 重啟回收）— 建議排程 cleanup workflow\n- @on-error「清理 /tmp」未實作（n8n 沒原生 file delete + 條件觸發；建議 Error Trigger workflow + delete file 節點）\n- Worker timeout 5 分鐘，超大 PDF 失敗\n- batchSize=1 換來透明度，犧牲速度（適合審計需求）\n\n**對應使用者需求**\n- @trigger / @form-fields → Form Trigger\n- @step (暫存) → readWriteFile\n- @step (Worker) → httpRequest\n- @step (loop 命名上傳) → splitOut → splitInBatches → set → awsS3\n- @output → aggregate → respondToWebhook\n- @on-error (清理 /tmp) → 部分實作（HTTP timeout 會中止；清理需另建 Error workflow）\n- @assume (volume mount) → 已寫入前提假設"
+      }
+    }
+  ],
+  "connections": {
+    "FormTrigger": {
+      "main": [
+        [
+          {
+            "node": "存暫存 PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "存暫存 PDF": {
+      "main": [
+        [
+          {
+            "node": "FastAPI Worker 切章節",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FastAPI Worker 切章節": {
+      "main": [
+        [
+          {
+            "node": "Split 章節陣列",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split 章節陣列": {
+      "main": [
+        [
+          {
+            "node": "Loop 章節 (batchSize=1 透明度)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop 章節 (batchSize=1 透明度)": {
+      "main": [
+        [
+          {
+            "node": "Set 命名規則",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate S3 keys",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set 命名規則": {
+      "main": [
+        [
+          {
+            "node": "S3 上傳",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "S3 上傳": {
+      "main": [
+        [
+          {
+            "node": "Loop 章節 (batchSize=1 透明度)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate S3 keys": {
+      "main": [
+        [
+          {
+            "node": "Respond to Form",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "id": "Il5atWAIOSH5iDF1"
+}
