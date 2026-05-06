@@ -1,6 +1,6 @@
 # splitPDF-orchestrated — 部署說明
 
-> 🌐 [English](README.en.md) | **繁體中文**
+> 🌐 [English](README.md) | **繁體中文**
 
 ## 快速 import
 

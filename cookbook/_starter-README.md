@@ -1,6 +1,6 @@
 # Starter Templates — 起手式
 
-> 🌐 [English](_starter-README.en.md) | **繁體中文**
+> 🌐 [English](_starter-README.md) | **繁體中文**
 
 > 不想在 n8n 手動拖一張黃色便利貼？匯入下面任一個 JSON，就有**現成定位好的 Layer 1 黃色便利貼**等你填字。
 

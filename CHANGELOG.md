@@ -7,7 +7,7 @@
 - 新增 `skills/tigerai/install-tigerai-n8n-pack/SKILL.md`：AG 專用自動安裝 Skill 指引。
 - 新增 `.agent/workflows/install-pack.md`：AG 專用一鍵安裝指令 `/install-n8n-pack`。
 - `01-INSTALL.md` / `01-INSTALL.en.md`：更新 Prerequisites 與安裝步驟，明示支援 Antigravity 與 Claude Code 雙環境。
-- `README.md` / `README.en.md`：更新目錄結構說明，標註安裝腳本具備雙環境支援。
+- `README.md` / `README.md`：更新目錄結構說明，標註安裝腳本具備雙環境支援。
 - `plugin.json` / `VERSION`：版本號升級至 v0.17.0，並於 `requires` 中加入 `antigravity`。
 
 ## v0.16.0 — 全面移除 MCP 依賴 + 16 cookbook 雙語 sticky 範例

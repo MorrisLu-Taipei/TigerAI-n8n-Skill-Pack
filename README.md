@@ -1,250 +1,246 @@
-# TigerAI n8n Skill Pack — 使用手冊
+# TigerAI n8n Skill Pack — User Manual
 
-> 🌐 [English](README.en.md) | **繁體中文**
+> 🌐 **English** | [繁體中文](README.zh.md)
 
-> 用「跟同事講話」的方式描述需求，AI 自動產出 n8n 完整 workflow。
-> 不會寫程式也能用。
+> Describe what you want in plain language (like talking to a coworker), and AI generates a complete n8n workflow for you.
+> No coding required.
 
-📊 **一張圖看懂完整流程** ：使用者寫黃色便利貼（Layer 1 意圖）→ TigerAI Skill Pack 大腦（Cookbook + 2,061 參考 workflow + DSL v1.2 + 12 個 Skill + 4 大企業模式）→ 產出三層結構 workflow JSON（n8n 真實 workflow）。三大特色，零門檻。
+![TigerAI n8n Skill Pack — full pipeline diagram](docs/images/tigerai-flow-en.png)
 
-👉 **點此開啟中文版完整流程圖**：[tigerai-flow.png](docs/images/tigerai-flow.png)
-👉 **English diagram**：[tigerai-flow-en.png](docs/images/tigerai-flow-en.png)
-
-*by n8n Taipei Ambassador Morris Lu*
+> 📊 **The whole pack in one picture**: User writes yellow sticky notes (Layer 1 intent) → TigerAI Skill Pack brain (Cookbook + 2,061 reference workflows + DSL v1.2 + 12 skills + 4 enterprise patterns) → Three-layer workflow JSON (real n8n workflow). Three features, zero learning curve.
+> *by n8n Taipei Ambassador Morris Lu*
 
 ---
 
-## 🤖 這是一個 Agentic Engineering Example
+## 🤖 This is an Agentic Engineering Example
 
-> **本專案完全使用 AI Agentic IDE（Antigravity / Claude Code）撰寫，從規格到 n8n Workflow 全程由 AI 代理人協作完成。**
+> **This entire project was authored using AI Agentic IDEs (Antigravity / Claude Code) — from spec to n8n workflows, every artifact was produced through human-AI agent collaboration.**
 
-這個 Skill Pack 本身就是「AI 代理工程（Agentic Engineering）」的實作示範：
+This Skill Pack is itself a working demo of **Agentic Engineering**:
 
-| 維度 | 傳統做法 | 本專案做法（Agentic） |
+| Dimension | Traditional way | This project (Agentic) |
 |---|---|---|
-| **規格撰寫** | 工程師逐字打 spec | 跟 AI 對話 → AI 產出 SDD（Spec-Driven Design） |
-| **n8n Workflow 開發** | 在畫布上手動拖節點 | 黃色便利貼寫需求 → AI 直接產出可執行 JSON |
-| **Skill / Plugin 製作** | 翻文件、寫範本 | Claude Code Skills + Antigravity `.agent/workflows/` 自動編排 |
-| **驗收測試** | 手動跑 case、寫報告 | AI 自跑 8 情境 → 自動產出 [`tests/REPORT-3.md`](tests/REPORT-3.md) |
-| **文件 / README / CHANGELOG** | 開發完才補 | AI 與程式碼同步生成 |
-| **第三方授權合規** | 人工審查 | AI 偵測密鑰外洩、scrub、產生 `THIRD_PARTY_NOTICES.md` |
+| **Spec writing** | Engineer types every word | Chat with AI → AI produces SDD (Spec-Driven Design) |
+| **n8n workflow dev** | Drag nodes on canvas | Write a yellow sticky note → AI emits runnable JSON |
+| **Skill / plugin authoring** | Read docs, copy templates | Claude Code Skills + Antigravity `.agent/workflows/` orchestration |
+| **Acceptance testing** | Run cases by hand, write report | AI runs 8 scenarios → auto-emits [`tests/REPORT-3.en.md`](tests/REPORT-3.en.md) |
+| **Docs / README / CHANGELOG** | Backfilled after coding | Generated alongside code |
+| **Third-party license compliance** | Manual review | AI detects leaked secrets, scrubs them, generates `THIRD_PARTY_NOTICES.md` |
 
-### 你會在這個 repo 看到的 Agentic 痕跡
+### Agentic footprints in this repo
 
-- **`skills/`** — 13 個 Claude Code / Antigravity Skill，每個 SKILL.md 都是 AI 與人共筆
-- **`.agent/workflows/`** — Antigravity 專屬的 agentic workflow（如 `/install-n8n-pack` 一鍵安裝）
-- **`cookbook/`** — 8 個自然語言 → workflow 的對照範例，示範如何「對 AI 講話」
-- **`spec/sticky-note-three-layer.md`** — 三層結構規範，強制 AI 產出可 review 的 workflow
-- **`research/patterns.md`** — AI 從 2,061 個真實 workflow 歸納出 7 大骨架 + 反模式
-- **`reference-workflows/`** — AI 對照語料（[Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows) MIT，已 scrub 密鑰）
+- **`skills/`** — 13 Claude Code / Antigravity skills; each `SKILL.md` is co-authored by humans and AI
+- **`.agent/workflows/`** — Antigravity-native agentic workflows (e.g. `/install-n8n-pack` one-shot installer)
+- **`cookbook/`** — 8 natural-language → workflow examples showing how to "talk to" the AI
+- **`spec/sticky-note-three-layer.md`** — Three-layer structure spec that forces reviewable AI output
+- **`research/patterns.md`** — 7 canonical skeletons + anti-patterns mined by AI from 2,061 real workflows
+- **`reference-workflows/`** — AI training corpus ([Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows), MIT, secrets scrubbed)
 
-### 適合誰參考這個專案
+### Who should study this project
 
-- 想學「**怎麼把 AI Agent 當工程同事用**」的開發者 / PM
-- 評估「**Antigravity / Claude Code 能否取代手寫 Skill / Workflow**」的團隊
-- 想看「**人 + AI 協作的真實工程產出長什麼樣**」的好奇者
+- Developers / PMs learning **how to use an AI agent as an engineering teammate**
+- Teams evaluating **whether Antigravity / Claude Code can replace hand-written skills / workflows**
+- Anyone curious **what real human-AI co-authored engineering output looks like**
 
-> 💡 換句話說：這不只是「給 n8n 用的 Skill Pack」，更是一份**「AI Agent 怎麼蓋產品」的開源教材**。
+> 💡 In other words: this isn't just "a Skill Pack for n8n" — it's also an open **case study of how AI agents build a real product**.
 
-### 👥 你（使用者）也可以這樣用
+### 👥 You (the user) can build n8n workflows the same way
 
-**裝上這個 Skill Pack 之後，你就能用同樣的 Agentic 方式打造自己的 n8n workflow** —— 完全不用學 n8n 節點語法，也不用寫程式：
+**Once you install this Skill Pack, you can author your own n8n workflows with the same agentic approach** — no node syntax to learn, no code to write:
 
-| 工具 | 你怎麼做 | AI 幫你做什麼 |
+| Tool | What you do | What the AI does |
 |---|---|---|
-| **Antigravity** | 在 Antigravity 開啟你的 n8n 專案，輸入 `/install-n8n-pack` 一鍵安裝，然後直接用自然語言描述 | 透過 `.agent/workflows/` 自動讀取需求 → 產生 workflow JSON → 透過 n8n API 部署 |
-| **Claude Code (CLI / VS Code)** | 在你的工作目錄跑 `bash install.sh`（或 `install.ps1`），然後對 Claude 說「我要一個…的 workflow」 | 13 個 Skill 自動載入 → 產出三層結構 workflow → 可直接 import n8n |
-| **任何 AI 助理（ChatGPT / Gemini）** | 把 [`cookbook/`](cookbook/00-INDEX.md) 範例貼給它當 few-shot | 模仿三層結構，產出符合規範的 workflow JSON |
+| **Antigravity** | Open your n8n project in Antigravity, run `/install-n8n-pack`, then describe what you want in plain language | `.agent/workflows/` auto-reads your intent → emits workflow JSON → deploys via n8n API |
+| **Claude Code (CLI / VS Code)** | Run `bash install.sh` (or `install.ps1`) in your working dir, then say "I want a workflow that…" | 13 skills auto-load → three-layer workflow produced → ready to import into n8n |
+| **Any AI assistant (ChatGPT / Gemini)** | Paste an example from [`cookbook/`](cookbook/00-INDEX.en.md) as a few-shot prompt | Imitates the three-layer structure and emits a compliant workflow JSON |
 
-**典型對話流程**（30 秒理解）：
+**Typical interaction** (30-second mental model):
 
 ```text
-你 ──> AI：「每天早上 9 點抓 Shopify 訂單，整理成日報寄給老闆，
-              失敗就在 Slack #ops 通知」
+You ──> AI: "Every weekday 9am, pull Shopify orders, build a daily
+             report, email it to the boss; on failure post to Slack #ops"
 
-AI ──> 你：✅ 已產生 workflow.json（Schedule → Shopify → Code → Email + Error → Slack）
-            ✅ 黃便利貼：保留你的原始需求
-            ✅ 藍便利貼：要設哪些 credential、限制、測試方法
-            ✅ 已透過 n8n API 部署到你的環境，webhook URL：https://...
+AI ──> You: ✅ workflow.json generated (Schedule → Shopify → Code → Email + Error → Slack)
+             ✅ Yellow sticky: your original requirement, preserved
+             ✅ Blue sticky: which credentials, constraints, test method
+             ✅ Deployed to your n8n via API, webhook URL: https://...
 ```
 
-> 🎯 **核心精神**：使用者不需要懂 n8n，只要會「對 AI 講人話」，就能產出企業級 workflow。Skill Pack 負責確保 AI 產出符合規範、可 review、可維護。
+> 🎯 **The core idea**: Users don't need to understand n8n internals — they just need to "talk like a human" to the AI. The Skill Pack ensures the AI's output is spec-compliant, reviewable, and maintainable.
 
-詳見 [`02-USAGE-MODES.md`](02-USAGE-MODES.md)（三種使用方式）與 [`03-FIRST-WORKFLOW.md`](03-FIRST-WORKFLOW.md)（15 分鐘手把手）。
+See [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) for the three usage modes and [`03-FIRST-WORKFLOW.en.md`](03-FIRST-WORKFLOW.en.md) for a 15-minute hands-on walkthrough.
 
 ---
 
-## 📖 閱讀順序（強烈建議照順序看）
+## 📖 Reading order (strongly recommended)
 
-| # | 檔案 | 適合誰 / 看多久 |
+| # | File | Audience / Time |
 |---|---|---|
-| 0️⃣ | **本檔 README.md** | 第一站總覽（5 分鐘） |
-| 1️⃣ | [`01-INSTALL.md`](01-INSTALL.md) | 第一次設定（10 分鐘） |
-| 2️⃣ | [`02-USAGE-MODES.md`](02-USAGE-MODES.md) | 三種使用方式怎麼選（5 分鐘） |
-| 3️⃣ | [`03-FIRST-WORKFLOW.md`](03-FIRST-WORKFLOW.md) | 跟我做：產出第一個 workflow（15 分鐘 hands-on） |
-| 4️⃣ | [`04-FAQ.md`](04-FAQ.md) | 卡關時查（隨時翻） |
+| 0️⃣ | **This README.md** | Overview, start here (5 min) |
+| 1️⃣ | [`01-INSTALL.en.md`](01-INSTALL.en.md) | First-time setup (10 min) |
+| 2️⃣ | [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) | Pick your usage style (5 min) |
+| 3️⃣ | [`03-FIRST-WORKFLOW.en.md`](03-FIRST-WORKFLOW.en.md) | Hands-on: build your first workflow (15 min) |
+| 4️⃣ | [`04-FAQ.en.md`](04-FAQ.en.md) | Reference when stuck |
 
 ---
 
-## ⚡ 90 秒快速理解
+## ⚡ Understand it in 90 seconds
 
-### 它能做什麼
+### What it does
 
-你在 n8n 畫布貼一張**黃色便利貼**，用中文（或英文）寫：
+You drop a **yellow sticky note** on the n8n canvas and write (in any language):
 
 ```text
-每天早上 9 點抓銷售資料寄日報給老闆。
-失敗就在 Slack #ops 通知。
+Every day at 9 AM, fetch sales data and email the daily report to my boss.
+On failure, notify Slack #ops.
 ```
 
-呼叫 AI，畫布上就出現完整 workflow：
+You ask AI to build it. The canvas now shows a complete workflow:
 
 ```
-┌─ 黃便利貼：你寫的需求（保留）
-├─ 中間：AI 產的節點：Schedule → HTTP → Code → Email
-└─ 藍便利貼：AI 寫的說明：要哪些 credential、假設、限制、測試方法
+┌─ Yellow sticky: your requirement (preserved as-is)
+├─ Middle: AI-generated nodes (Schedule → HTTP → Code → Email)
+└─ Blue sticky: AI's notes (credentials needed, assumptions, limitations, how to test)
 ```
 
-不用寫程式，不用學語法，不用記 n8n 節點名稱。
+No code. No syntax to learn. No need to memorize n8n node names.
 
-### 三種使用方式（細節見 [02-USAGE-MODES.md](02-USAGE-MODES.md)）
+### Three usage modes (details in [02-USAGE-MODES.en.md](02-USAGE-MODES.en.md))
 
-| 模式 | 何時用 | 觸發詞 |
+| Mode | When | Trigger phrase |
 |---|---|---|
-| 🪄 Cookbook 照抄 | 知道要什麼，要最快 | 直接複製 [cookbook](cookbook/00-INDEX.md) 範例 |
-| 💬 問答模式 | 完全不會描述需求 | 「啟用問答模式」 |
-| 🔍 範例查詢 | 想先看別人怎麼做 | 「找跟 X 相關的範例」 |
+| 🪄 Cookbook copy | You know what you want, fast | Copy from [cookbook](cookbook/00-INDEX.en.md) |
+| 💬 Q&A mode | You have no idea how to describe it | "enable Q&A mode" / "問答模式" |
+| 🔍 Example finder | Want to see prior art first | "find examples for X" / "範例查詢" |
 
 ---
 
-## 📂 Pack 內容
+## 📂 Pack contents
 
 ```text
 TigerAI-n8n-Skill-Pack/
-├── README.md                  ← 你在這裡
-├── 01-INSTALL.md              ← 安裝步驟
-├── 02-USAGE-MODES.md          ← 三種使用方式
-├── 03-FIRST-WORKFLOW.md       ← 跟我做：第一個 workflow
-├── 04-FAQ.md                  ← 常見問題
+├── README.md / README.zh.md ← You are here
+├── 01-INSTALL.md/.en.md       ← Install
+├── 02-USAGE-MODES.md/.en.md   ← Three usage modes
+├── 03-FIRST-WORKFLOW.md/.en.md ← Hands-on tutorial
+├── 04-FAQ.md/.en.md           ← Common questions
 │
-├── cookbook/                  ← 8 個照抄範例（每個有自然語言版 + DSL 折疊）
-│   └── 00-INDEX.md
+├── cookbook/                  ← 8 copy-paste recipes (each has plain-language + DSL fold)
+│   └── 00-INDEX.md/.en.md
 │
-├── skills/                    ← AI 助理載入的 13 個 Skill
-│   ├── _vendor/                  7 個官方 n8n-skills（MIT）
-│   └── tigerai/                  6 個 TigerAI 自製（含 AG 自動安裝 Skill）
+├── skills/                    ← 13 Skills loaded by AI assistant
+│   ├── _vendor/                  7 official n8n-skills (MIT)
+│   └── tigerai/                  6 TigerAI custom (incl. AG Auto-Install)
 │
-├── spec/                      ← 技術規範（給工程師）
-│   ├── sticky-note-three-layer.md
-│   └── sticky-note-dsl.md
-│
-├── examples/tigerai-flagship/ ← 3 個企業級範例（含 SDD）
-├── reference-workflows/       ← 2,061 個公開 workflow（AI 對照語料）
-├── research/                  ← 研究與統計（給工程師）
-├── tests/                     ← 三輪驗收紀錄
+├── spec/                      ← Technical specs (for engineers)
+├── examples/tigerai-flagship/ ← 3 enterprise-grade examples (with SDD)
+├── reference-workflows/       ← 2,061 public workflows (AI corpus)
+├── research/                  ← Research artifacts
+├── tests/                     ← Three rounds of acceptance reports
 │
 ├── CHANGELOG.md / VERSION
-├── install.sh / install.ps1   ← 安裝腳本（支援 Claude Code 與 Antigravity）
-├── .agent/workflows/          ← Antigravity 專屬自動化流程（如 /install-n8n-pack）
-└── plugin.json                ← Skill 清單
+├── install.sh / install.ps1   ← Install scripts (Supports Claude Code & Antigravity)
+├── .agent/workflows/          ← Antigravity-exclusive workflows (e.g., /install-n8n-pack)
+└── plugin.json                ← Skill manifest
 ```
 
 ---
 
-## 🎯 不同身份建議的閱讀路徑
+## 🎯 Suggested reading paths by role
 
-### 我是 n8n 新手（沒寫過 workflow）
-1. 本檔 → `01-INSTALL.md` → `03-FIRST-WORKFLOW.md`
-2. 跑通第一個後，回 `cookbook/00-INDEX.md` 找你要的場景
-3. 卡關 → `04-FAQ.md`
+### I'm new to n8n (never built a workflow)
+1. This file → `01-INSTALL.en.md` → `03-FIRST-WORKFLOW.en.md`
+2. After your first workflow runs, browse `cookbook/00-INDEX.en.md` for your scenario
+3. Stuck? → `04-FAQ.en.md`
 
-### 我是 n8n 老手，想評估這套值不值得用
-1. 本檔 → `02-USAGE-MODES.md`
-2. 看 `tests/REPORT-3.md`：真實 n8n 環境驗收成績
-3. 看 `examples/tigerai-flagship/`：企業級範例 SDD
+### I'm experienced with n8n, evaluating this Pack
+1. This file → `02-USAGE-MODES.en.md`
+2. Read `tests/REPORT-3.md`: real n8n acceptance scores
+3. Browse `examples/tigerai-flagship/`: enterprise-grade SDD examples
 
-### 我是工程師 / 整合者
-1. 本檔 → `spec/sticky-note-three-layer.md` + `spec/sticky-note-dsl.md`
-2. `skills/tigerai/sticky-note-to-workflow/SKILL.md`：核心執行邏輯
-3. `skills/tigerai/n8n-api-bridge/SKILL.md`：n8n REST API SOP
-4. `research/patterns.md`：7 大標準骨架 + 反模式
+### I'm an engineer / integrator
+1. This file → `spec/sticky-note-three-layer.md` + `spec/sticky-note-dsl.md`
+2. `skills/tigerai/sticky-note-to-workflow/SKILL.md`: the core executor
+3. `skills/tigerai/n8n-api-bridge/SKILL.md`: n8n REST API SOP
+4. `research/patterns.md`: 7 standard skeletons + anti-patterns
 
-### 我要分發給內部團隊用
-1. 本檔 → `01-INSTALL.md` 跑通
-2. 讀 `04-FAQ.md` 把問題答案準備好
-3. 把整個資料夾打包給團隊，請他們從本 README 開始讀
+### I'm distributing this to my team
+1. This file → run `01-INSTALL.en.md` end-to-end
+2. Read `04-FAQ.en.md` to prepare for team questions
+3. Hand the entire folder to teammates and ask them to start at this README
 
 ---
 
-## ✨ 三層結構（一張圖看懂）
+## ✨ The three-layer structure (one diagram)
 
 ```text
 ┌─────────────────────────────────────────────────────┐
-│ 🟡 Layer 1（黃色便利貼）：使用者需求                │
-│    「每天早上 9 點...」                              │
-│    ← AI 不會改它，永遠是 source of truth             │
+│ 🟡 Layer 1 (yellow sticky): User intent              │
+│    "Every day at 9 AM..."                            │
+│    ← AI never modifies this. Always the source of    │
+│      truth.                                          │
 ├─────────────────────────────────────────────────────┤
-│    Layer 2：AI 產出的 nodes 與連線                  │
+│    Layer 2: AI-generated nodes & connections        │
 │    Schedule → HTTP → Code → Email                   │
 ├─────────────────────────────────────────────────────┤
-│ 🔵 Layer 3（藍色便利貼）：AI 回寫的說明             │
-│    • 節點選型理由                                    │
-│    • 你需要設哪些 credential                         │
-│    • 前提假設與已知限制                              │
-│    • 怎麼測試                                        │
+│ 🔵 Layer 3 (blue sticky): AI's commentary            │
+│    • Why each node was chosen                        │
+│    • Required credentials                            │
+│    • Assumptions and known limits                    │
+│    • How to test                                     │
 └─────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 🛠️ Pack 解決的痛點
+## 🛠️ Pain points this Pack solves
 
-| 痛點 | 解法 |
+| Pain | Solution |
 |---|---|
-| AI 寫的 workflow 不一致、難 review | 強制三層結構 |
-| 使用者不會寫需求給 AI | 自然語言便利貼 + 8 個 cookbook + 問答模式 |
-| AI 不夠懂 n8n | 沿用 7 個官方 Skill + 2,061 個 workflow 語料 |
-| 沒有企業級模式 | 4 大支柱：原子化 / Universal Worker / SDD / 安全 |
-| 不知怎麼開始 | `03-FIRST-WORKFLOW.md` 15 分鐘手把手 |
+| AI-written workflows are inconsistent, hard to review | Enforce three-layer structure |
+| Users don't know how to describe what they want | Plain-language stickies + 8 cookbooks + Q&A mode |
+| AI doesn't know n8n well enough | 7 official Skills + 2,061 workflow corpus |
+| No enterprise-grade patterns | 4 pillars: Atomic Orchestration / Universal Worker / SDD / Security |
+| Don't know where to start | `03-FIRST-WORKFLOW.en.md` 15-min hands-on |
 
 ---
 
-## 📊 真實環境驗收成績（v0.9.0 R3）
+## 📊 Real-environment acceptance results (v0.9.0 R3)
 
-對使用者既有的 n8n 2.10.3 + Postgres 環境跑 8 個情境：
+Tested 8 scenarios on a real n8n 2.10.3 + Postgres setup:
 
-| 層 | 通過率 |
+| Layer | Pass rate |
 |---|---|
-| JSON 結構解析 | 8/8 (100%) |
+| JSON parse | 8/8 (100%) |
 | n8n CLI Import | 8/8 (100%) |
-| API Activate | 7/8 (87.5%) — T3 因 Telegram bot token 真實檢查 |
-| Webhook 路由正確 | 4/4 (100%) |
-| 完整 execute success | 2/4（含 `continueOnFail` 設計）|
+| API Activate | 7/8 (87.5%) — T3 blocked by real Telegram bot token check |
+| Webhook routing | 4/4 (100%) |
+| Full execute success | 2/4 (with `continueOnFail` design) |
 
-詳見 [`tests/REPORT-3.md`](tests/REPORT-3.md)。
-
----
-
-## 🔢 版本與變更紀錄
-
-當前版本見 [`VERSION`](VERSION)；歷次變更見 [`CHANGELOG.md`](CHANGELOG.md)。
+Details: [`tests/REPORT-3.en.md`](tests/REPORT-3.en.md).
 
 ---
 
-## 📜 授權
+## 🔢 Version & changelog
 
-- `skills/_vendor/`：MIT — 來自 [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills)，見 `skills/_vendor/LICENSE`
-- `reference-workflows/`：MIT — 來自 [Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows)。原始檔內的 API token / bearer token 等密鑰，於收錄前已替換為佔位符（如 `YOUR_API_TOKEN_HERE`）
-- 其餘（TigerAI 自製 skills、cookbook、spec、docs、安裝腳本等）：**TigerAI Proprietary**（散佈條件依公司決定）
-
-完整第三方授權聲明見 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
+Current version: see [`VERSION`](VERSION). All changes: [`CHANGELOG.md`](CHANGELOG.md).
 
 ---
 
-## 🆘 卡關了？
+## 📜 License
 
-對 AI（Claude / ChatGPT）說：
+- `skills/_vendor/`: MIT — from [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills), see `skills/_vendor/LICENSE`
+- `reference-workflows/`: MIT — from [Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows). API tokens, bearer tokens, and other secrets present in the original files have been replaced with placeholders (e.g. `YOUR_API_TOKEN_HERE`) before redistribution.
+- The rest (TigerAI-authored skills, cookbook, specs, docs, install scripts): **TigerAI Proprietary** (distribution terms set by your company)
 
-> 「我是新手，跟著 TigerAI Skill Pack 的 README 在做，目前看到 [檔名]，遇到 [問題]」
+Full third-party notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 
-AI 會接手診斷。或先翻 [`04-FAQ.md`](04-FAQ.md)。
+---
+
+## 🆘 Stuck?
+
+Tell Claude / ChatGPT:
+
+> "I'm new to this. Following the TigerAI Skill Pack README, currently on [filename], hit [problem]."
+
+The AI will diagnose. Or check [`04-FAQ.en.md`](04-FAQ.en.md) first.

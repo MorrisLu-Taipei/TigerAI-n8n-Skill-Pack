@@ -1,6 +1,6 @@
 # Verified Runnable Examples — 真實跑過的 workflow
 
-> 🌐 [English](_runnable-README.en.md) | **繁體中文**
+> 🌐 [English](_runnable-README.md) | **繁體中文**
 
 > 與 cookbook 範例（教學用 markdown）和 `_starter-*` 模板（空白起手式）不同：
 > 這裡的 JSON 是**真的在 n8n 2.10.3 環境跑過、curl 觸發成功、execution status=success** 的 workflow。

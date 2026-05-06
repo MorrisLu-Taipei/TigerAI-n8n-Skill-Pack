@@ -10,9 +10,9 @@ Each example offers two formats:
 
 > 🌏 **Want a side-by-side bilingual reference of all 8 sticky notes?** → [`STICKY-EXAMPLES-BILINGUAL.en.md`](STICKY-EXAMPLES-BILINGUAL.en.md)
 >
-> 🚀 **First time?** Import a starter JSON to get a ready-positioned yellow sticky → [`_starter-README.en.md`](_starter-README.en.md) (blank version + bilingual fill-in template)
+> 🚀 **First time?** Import a starter JSON to get a ready-positioned yellow sticky → [`_starter-README.md`](_starter-README.md) (blank version + bilingual fill-in template)
 >
-> ✅ **Want a guaranteed-runnable complete workflow as reference?** → [`_runnable-README.en.md`](_runnable-README.en.md) (2 R3-verified versions: real n8n curl 200 + execution success)
+> ✅ **Want a guaranteed-runnable complete workflow as reference?** → [`_runnable-README.md`](_runnable-README.md) (2 R3-verified versions: real n8n curl 200 + execution success)
 
 Page contents:
 - **Use case** — when to use this

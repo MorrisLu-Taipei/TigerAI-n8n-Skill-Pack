@@ -1,6 +1,6 @@
 # splitMP3-API-Orchestrated — 部署說明
 
-> 🌐 [English](README.en.md) | **繁體中文**
+> 🌐 [English](README.md) | **繁體中文**
 
 ## 部署步驟
 
