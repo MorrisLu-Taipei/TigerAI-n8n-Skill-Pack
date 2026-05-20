@@ -1,4 +1,20 @@
 # Changelog
+
+## v0.18.0 — 新增 Google Workspace 行政專案 n8n 移植範例
+
+**新範例：[`examples/google-workspace-admin-workflow/`](examples/google-workspace-admin-workflow/)**
+
+把 [mihozip/google-workspace-admin-project-workflow](https://github.com/mihozip/google-workspace-admin-project-workflow) 的 Google Apps Script 系統 1:1 移植到 n8n。
+
+- **1 個 setup workflow + 2 個 core sub-workflow + 4 個 entry workflow**（n8n Form Trigger × 2 + Google Forms webhook × 2，共用同一份 core）
+- **原生節點優先**：Drive / Sheets / Docs / Calendar / Gmail 原生節點全用上；只有 3 處走 HTTP Request 因為原生不支援（Docs paragraph style、Sheets dropdown 驗證、Sheets header 格式化）— 每處掛 🟡 Sticky Note 寫清楚為什麼
+- **逐字保真度**：11 個專案子資料夾、20 欄總控表 / 17 欄階段紀錄 / 12 欄待辦表 / 6 欄檢核表 header、10 筆預設任務、10 筆檢核項目、14 個日期類型、5 個提醒偏移、9 段 Doc 標題結構全部對齊上游
+- **Apps Script bridge `.gs`** 供想保留原 Google Forms 體驗的人接到 n8n webhook
+- **完整文件**：`README.md`（中英）+ `SCENARIO.md`（情境故事 + workflow 名字對照速查表）+ `SDD.md`（規劃/研發/轉移/測試/驗證 5 段）+ `docs/install.md` + `docs/google-credentials.md` + `docs/field-mapping.md`（Apps Script ↔ n8n 函式對照）
+- **驗證腳本**：`_audit.mjs`（靜態 lint，依 `n8n-validation-expert` + `n8n-expression-syntax` 規則）+ `_n8n_import_test.mjs`（本機 n8n REST round-trip）。7/7 通過
+
+**本版本不動核心 skill**。原本的 `skills/`、`reference-workflows/`、`cookbook/` 維持 0.17.0 狀態。
+
 ## v0.17.0 — 新增 Antigravity (AG) 支援
 
 **安裝腳本與文件升級**
