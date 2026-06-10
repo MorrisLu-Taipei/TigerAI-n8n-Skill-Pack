@@ -230,9 +230,12 @@ Current version: see [`VERSION`](VERSION). All changes: [`CHANGELOG.md`](CHANGEL
 
 ## 📜 License
 
+**The whole pack is now MIT-licensed.** See the root [`LICENSE`](LICENSE) file.
+
 - `skills/_vendor/`: MIT — from [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills), see `skills/_vendor/LICENSE`
 - `reference-workflows/`: MIT — from [Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows). API tokens, bearer tokens, and other secrets present in the original files have been replaced with placeholders (e.g. `YOUR_API_TOKEN_HERE`) before redistribution.
-- The rest (TigerAI-authored skills, cookbook, specs, docs, install scripts): **TigerAI Proprietary** (distribution terms set by your company)
+- `examples/line-ai-customer-service-onprem/`: derived from MIT-licensed `scorpioliu0953/ai_customer_service`, attribution chain in the example's `CREDITS.md`.
+- The rest (TigerAI-authored skills, cookbook, specs, docs, install scripts, manifesto, marquee `code-to-workflow` skill): **MIT** (Copyright (c) 2026 Morris Lu / TigerAI).
 
 Full third-party notices: [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md).
 

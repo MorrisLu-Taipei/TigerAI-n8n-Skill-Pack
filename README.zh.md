@@ -232,9 +232,12 @@ TigerAI-Code2n8n-Skill-Pack/
 
 ## 📜 授權
 
+**整套 pack 現已採 MIT 授權。** 見根目錄 [`LICENSE`](LICENSE)。
+
 - `skills/_vendor/`：MIT — 來自 [czlonkowski/n8n-skills](https://github.com/czlonkowski/n8n-skills)，見 `skills/_vendor/LICENSE`
 - `reference-workflows/`：MIT — 來自 [Zie619/n8n-workflows](https://github.com/Zie619/n8n-workflows)。原始檔內的 API token / bearer token 等密鑰，於收錄前已替換為佔位符（如 `YOUR_API_TOKEN_HERE`）
-- 其餘（TigerAI 自製 skills、cookbook、spec、docs、安裝腳本等）：**TigerAI Proprietary**（散佈條件依公司決定）
+- `examples/line-ai-customer-service-onprem/`：MIT 授權衍生自 `scorpioliu0953/ai_customer_service`，出處鏈見該範例的 `CREDITS.md`
+- 其餘（TigerAI 自製 skills、cookbook、spec、docs、安裝腳本、Code2n8n 宣言、marquee `code-to-workflow` skill 等）：**MIT**（Copyright (c) 2026 Morris Lu / TigerAI）
 
 完整第三方授權聲明見 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
 

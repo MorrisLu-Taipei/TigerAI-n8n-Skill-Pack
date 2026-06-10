@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.22.1 — 整套 pack 改授權為 MIT
+
+整個 repo 的授權從 *TigerAI Proprietary* 改為 **MIT**。原本就 MIT 的部分（vendor skills、reference-workflows、兩個從 MIT 上游衍生的 LINE CS 範例）維持原樣，這次是把「其餘 TigerAI 自製內容」也一起標成 MIT，整個 pack 一致。
+
+- 新增 [`LICENSE`](LICENSE) — 根目錄 MIT 全文（Copyright (c) 2026 Morris Lu / TigerAI），含對 bundled 第三方材料的指引
+- `plugin.json` 的 `license` 欄位：`Proprietary (...)` → `MIT`
+- `README.md` / `README.zh.md` 授權段：標清楚整套 MIT，並列出每個衍生子目錄的出處
+- `THIRD_PARTY_NOTICES.md` 結尾段：原本說「其餘是 TigerAI Proprietary」改為「其餘是 MIT」，第三方材料各自保留自己的版權聲明
+- `VERSION` → 0.22.1
+
+GitHub 上將自動偵測 LICENSE 並把 repo 的 license badge 顯示為 MIT。
+
 ## v0.22.0 — Marquee skill `code-to-workflow` + 地端 LINE CS 案例
 
 兌現 [CODE2N8N.md](CODE2N8N.md) 宣言裡承諾的 marquee skill — 終於有一個明確的「拿任何程式系統轉成 n8n」方法論技能，由 3 個真實案例的踩坑經驗淬煉。

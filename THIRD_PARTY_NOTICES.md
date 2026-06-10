@@ -54,9 +54,12 @@ The seven official n8n skills bundled under `skills/_vendor/` are from:
 
 ---
 
-## Disclaimer
+## License of the rest
 
 The rest of this repository (TigerAI-authored skills, cookbook, specs,
-docs, install scripts, and Antigravity workflows) is **TigerAI
-Proprietary** and is **not** covered by the MIT licenses above. See the
-top-level `README.md` for distribution terms.
+docs, install scripts, Antigravity workflows, the Code2n8n manifesto,
+and the marquee `code-to-workflow` skill) is licensed under **MIT**
+(Copyright (c) 2026 Morris Lu / TigerAI). See the root [`LICENSE`](LICENSE)
+file for the full text. The MIT-licensed third-party material listed
+above retains its original copyright and is bundled per its respective
+notice.
