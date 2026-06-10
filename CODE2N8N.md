@@ -28,10 +28,38 @@
 - 誰在什麼時間做了什麼，留得下紀錄嗎？
 - IT、營運、主管能不能看同一張圖談話？
 - 同事離開後，下一個人接得住嗎？
+- AI 有沒有漏掉真正的認證、權限、注入防護與秘密管理？
 
 AI 很會把程式寫出來。
 
 但企業需要的不是一段「今天能跑」的程式，而是一套**明天仍然能登入、能管理、能修改、能稽核、能交接**的系統。
+
+## 能 Demo，不代表能上線
+
+AI Coding 最危險的錯覺，不是程式寫不出來，而是程式**看起來已經完成**。
+
+在 v0.22.2 收錄的 LINE AI 客服地端案例中，系統有登入頁、管理後台、資料庫、Redis、Qdrant、Ollama 與 37 節點 n8n workflow；Demo 看起來是一套完整產品。但 Code2n8n 安全審查實際發現：
+
+- `/api/auth/me` 永遠回傳 `authenticated: true`，沒有真正的 session 或 JWT
+- 所有 `/api/*` 管理資料路由都沒有 auth middleware
+- 密碼以明文比對
+- request body 的欄位名稱直接拼進 SQL，形成 identifier injection
+- API key、LINE secret、用戶狀態與 n8n credential 名單可能被未授權讀取
+- 沒有 CSRF、rate limit 與操作 audit log
+
+這些問題不會阻止 Demo 跑起來，卻足以阻止企業上線。
+
+因此 Code2n8n 不只是「把程式搬到 n8n」。它在 source inventory 與架構分區之間加入強制的 **Step 1.5 Security Audit**：檢查認證是否真實、middleware 是否完整、SQL identifier 是否安全、秘密是否外露、上傳與狀態變更是否有防護。
+
+如果缺陷沒有修補，就必須：
+
+1. 降級所有「enterprise-ready」或「production-ready」宣稱
+2. 發布 `SECURITY-CAVEATS.md`，列出檔案、行號、重現方式與修補方向
+3. 明確標示 **DO NOT DEPLOY AS-IS**
+
+這份真實案例與完整揭露見 [`examples/line-ai-customer-service-onprem/SECURITY-CAVEATS.md`](examples/line-ai-customer-service-onprem/SECURITY-CAVEATS.md)。
+
+> **AI 寫的能跑，不代表企業能上線。Code2n8n 的價值不只在轉換，也在移植前的審查與誠實揭露。**
 
 ## 我們客戶的做法
 
@@ -79,6 +107,7 @@ SaaS─┘
 | 跨系統串接 | 可開發 | 可視化編排 |
 | 營運交接 | 靠工程文件 | 流程本身就是交接介面 |
 | 企業治理 | 額外建設 | 接身份 / 權限 / 紀錄 / 政策 |
+| 認證 / 注入 / 秘密安全審查 | 容易留下可跑但不可上線的 POC 缺口 | Code2n8n Step 1.5 強制稽核；未修補就發布 `SECURITY-CAVEATS.md` |
 
 ## 在這個 Pack 裡，Code2n8n 怎麼落地？
 
@@ -101,9 +130,9 @@ SaaS─┘
 
 **以前**我們用 n8n 來避免寫程式。
 
-**現在**我們用 AI 寫程式，再用 Code2n8n 與 n8n，讓程式真正進入企業。
+**現在**我們用 AI 寫程式，再用 Code2n8n 與 n8n，讓程式**通過審查**真正進入企業。
 
-> **AI Coding 解決「功能怎麼做」；Code2n8n 解決「功能如何模組化」；n8n 解決「模組如何與整個企業協作」。**
+> **AI Coding 解決「功能怎麼做」；Code2n8n 解決「功能如何模組化與審查」；n8n 解決「模組如何與整個企業協作」。**
 
 ---
 
@@ -116,6 +145,16 @@ After Claude Code, Codex, and Antigravity, there is no real No-Code anymore. AI 
 **So why do my customers want n8n *more*, not less?**
 
 Because what enterprises need was never just "code that runs today." They need code that can be **logged into, audited, parameter-tweaked, version-controlled, rolled back, handed off, governed across systems, and read by IT + ops + managers on the same canvas** — tomorrow, next quarter, next succession.
+
+### Demo-ready is not production-ready
+
+The on-prem LINE customer-service case bundled in v0.22.2 looked complete: login screen, admin dashboard, Postgres, Redis, Qdrant, Ollama, and a 37-node n8n workflow. Code2n8n's audit still found fake authentication (`/api/auth/me` always returned true), unprotected data routes, plaintext password comparison, SQL identifier injection, exposed secrets, and no CSRF, rate limiting, or operation audit trail.
+
+Those defects do not stop a demo. They do stop an enterprise deployment.
+
+That is why Code2n8n mandates a **Step 1.5 Security Audit** before any "enterprise-ready" claim. If findings remain unfixed, the port must downgrade its deployment claims and publish a `SECURITY-CAVEATS.md` with evidence, reproduction steps, and hardening guidance.
+
+> **AI-written software that runs is not automatically software an enterprise can deploy. Code2n8n is both a migration method and a review gate.**
 
 ### The Code2n8n workflow
 
@@ -146,7 +185,8 @@ Enterprises run ERP + CRM + MES + HR + DBs + Email + Sheets + SaaS + on-prem LLM
 | Cross-system wiring | Possible | Visual orchestration |
 | Handover | Engineering docs | The workflow *is* the handover |
 | Governance | Extra build | Identity / permission / history / policy connectors |
+| Auth / injection / secret review | Frequently omitted in demo-ready POCs | Mandatory Step 1.5 audit; disclose unresolved findings |
 
 ### Closing line
 
-> **AI Coding solves "how is the function built"; Code2n8n solves "how is the capability modularized"; n8n solves "how the modules cooperate across the whole enterprise."**
+> **AI Coding solves "how is the function built"; Code2n8n solves "how is the capability modularized *and audited*"; n8n solves "how the modules cooperate across the whole enterprise."**

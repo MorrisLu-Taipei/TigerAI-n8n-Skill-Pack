@@ -7,8 +7,30 @@
 
 ![TigerAI Code2n8n Skill Pack 完整流程圖](docs/images/tigerai-flow.png)
 
-> 📊 **一張圖看懂**：使用者寫黃色便利貼（Layer 1 意圖）→ Code2n8n Skill Pack 大腦（Cookbook + 2,061 參考 workflow + DSL v1.2 + 13 個 Skill + 4 大企業模式）→ 產出三層結構 workflow JSON（n8n 真實 workflow），具備登入、稽核、版控、交接、跨系統編排的企業治理能力。
+> 📊 **一張圖看懂**：自然語言需求或既有程式系統 → Code2n8n Skill Pack（Cookbook + 2,061 參考 workflow + DSL v1.2 + 14 個 manifest Skill + 4 大企業模式）→ 分析哪些邏輯留在程式、哪些上升為 n8n 節點 → 產出可檢查、可交接、可跨系統編排的 workflow。
 > *by n8n Taipei Ambassador Morris Lu*
+
+---
+
+## 🔄 兩條 Code2n8n 路徑
+
+這個 Pack 不只會把便利貼變成 workflow。它支援兩個方向：
+
+```text
+路徑 A：從零開始
+自然語言 / 黃色便利貼
+  → sticky-note-to-workflow
+  → n8n Workflow
+
+路徑 B：移植既有系統
+Apps Script / Express / Lambda / Netlify Functions / Docker stack
+  → code-to-workflow（盤點、分區、安全審查、移植、驗證）
+  → 程式模組 + n8n Workflow + 移植文件
+```
+
+Code2n8n **不是逐行把 Python 或 JavaScript 翻成節點**。它做的是系統重新分工：複雜演算法留在程式，觸發、跨系統串接、重試、人工核准、通知與執行紀錄上升為可見、可管理的 workflow。
+
+> **AI Coding 解決「功能怎麼做」；Code2n8n 解決「功能如何模組化與審查」；n8n 解決「模組如何與整個企業協作」。**
 
 ---
 
@@ -29,7 +51,7 @@
 
 ### 你會在這個 repo 看到的 Agentic 痕跡
 
-- **`skills/`** — 13 個 Claude Code / Antigravity Skill，每個 SKILL.md 都是 AI 與人共筆
+- **`skills/`** — `plugin.json` 登錄 14 個 Claude Code / Antigravity Skill，每個 SKILL.md 都是 AI 與人共筆
 - **`.agent/workflows/`** — Antigravity 專屬的 agentic workflow（如 `/install-n8n-pack` 一鍵安裝）
 - **`cookbook/`** — 8 個自然語言 → workflow 的對照範例，示範如何「對 AI 講話」
 - **`spec/sticky-note-three-layer.md`** — 三層結構規範，強制 AI 產出可 review 的 workflow
@@ -39,6 +61,7 @@
 ### 適合誰參考這個專案
 
 - 想學「**怎麼把 AI Agent 當工程同事用**」的開發者 / PM
+- 已有 Apps Script、Express、Lambda、Netlify Functions 或 Docker 系統，想評估「**哪些留在程式、哪些移到 n8n**」的工程團隊
 - 評估「**Antigravity / Claude Code 能否取代手寫 Skill / Workflow**」的團隊
 - 想看「**人 + AI 協作的真實工程產出長什麼樣**」的好奇者
 
@@ -51,7 +74,7 @@
 | 工具 | 你怎麼做 | AI 幫你做什麼 |
 |---|---|---|
 | **Antigravity** | 在 Antigravity 開啟你的 n8n 專案，輸入 `/install-n8n-pack` 一鍵安裝，然後直接用自然語言描述 | 透過 `.agent/workflows/` 自動讀取需求 → 產生 workflow JSON → 透過 n8n API 部署 |
-| **Claude Code (CLI / VS Code)** | 在你的工作目錄跑 `bash install.sh`（或 `install.ps1`），然後對 Claude 說「我要一個…的 workflow」 | 13 個 Skill 自動載入 → 產出三層結構 workflow → 可直接 import n8n |
+| **Claude Code (CLI / VS Code)** | 在你的工作目錄跑 `bash install.sh`（或 `install.ps1`），然後描述新需求或指定既有程式 | Skill 自動載入 → 從零產生 workflow，或執行 Code2n8n 系統移植 |
 | **任何 AI 助理（ChatGPT / Gemini）** | 把 [`cookbook/`](cookbook/00-INDEX.md) 範例貼給它當 few-shot | 模仿三層結構，產出符合規範的 workflow JSON |
 
 **典型對話流程**（30 秒理解）：
@@ -66,9 +89,13 @@ AI ──> 你：✅ 已產生 workflow.json（Schedule → Shopify → Code →
             ✅ 已透過 n8n API 部署到你的環境，webhook URL：https://...
 ```
 
-> 🎯 **核心精神**：使用者不需要懂 n8n，只要會「對 AI 講人話」，就能產出企業級 workflow。Skill Pack 負責確保 AI 產出符合規範、可 review、可維護。
+> 🎯 **核心精神**：使用者不需要先背熟 n8n 節點語法，只要能說清楚需求，就能產出有結構、可 review、可維護的 workflow。要宣稱可上線，仍必須完成 credential 設定、真實執行驗證與安全審查。
 
-詳見 [`02-USAGE-MODES.md`](02-USAGE-MODES.md)（三種使用方式）與 [`03-FIRST-WORKFLOW.md`](03-FIRST-WORKFLOW.md)（15 分鐘手把手）。
+如果你已經有程式，不要先改寫成便利貼。直接說：
+
+> 「請用 `code-to-workflow` 盤點這個專案，判斷哪些邏輯留在程式、哪些應移到 n8n；先做安全審查，再產出 SDD、workflow 與驗證結果。」
+
+詳見 [`02-USAGE-MODES.md`](02-USAGE-MODES.md)（三種從零使用模式）與 [`03-FIRST-WORKFLOW.md`](03-FIRST-WORKFLOW.md)（15 分鐘手把手）；既有程式移植則直接使用 [`code-to-workflow`](skills/tigerai/code-to-workflow/SKILL.md)。
 
 ---
 
@@ -78,7 +105,7 @@ AI ──> 你：✅ 已產生 workflow.json（Schedule → Shopify → Code →
 |---|---|---|
 | 0️⃣ | **本檔 README.md** | 第一站總覽（5 分鐘） |
 | 1️⃣ | [`01-INSTALL.md`](01-INSTALL.md) | 第一次設定（10 分鐘） |
-| 2️⃣ | [`02-USAGE-MODES.md`](02-USAGE-MODES.md) | 三種使用方式怎麼選（5 分鐘） |
+| 2️⃣ | [`02-USAGE-MODES.md`](02-USAGE-MODES.md) | 三種從零使用模式怎麼選（5 分鐘） |
 | 3️⃣ | [`03-FIRST-WORKFLOW.md`](03-FIRST-WORKFLOW.md) | 跟我做：產出第一個 workflow（15 分鐘 hands-on） |
 | 4️⃣ | [`04-FAQ.md`](04-FAQ.md) | 卡關時查（隨時翻） |
 
@@ -105,13 +132,16 @@ AI ──> 你：✅ 已產生 workflow.json（Schedule → Shopify → Code →
 
 不用寫程式，不用學語法，不用記 n8n 節點名稱。
 
-### 三種使用方式（細節見 [02-USAGE-MODES.md](02-USAGE-MODES.md)）
+### 四種使用方式
 
 | 模式 | 何時用 | 觸發詞 |
 |---|---|---|
 | 🪄 Cookbook 照抄 | 知道要什麼，要最快 | 直接複製 [cookbook](cookbook/00-INDEX.md) 範例 |
 | 💬 問答模式 | 完全不會描述需求 | 「啟用問答模式」 |
 | 🔍 範例查詢 | 想先看別人怎麼做 | 「找跟 X 相關的範例」 |
+| 🔄 Code2n8n 移植 | 已有程式或系統，想搬進 n8n 治理 | 「用 `code-to-workflow` 分析並移植這個專案」 |
+
+前三種從「意圖」開始，第四種從「既有程式」開始。Code2n8n 移植的完整方法論見 [`skills/tigerai/code-to-workflow/SKILL.md`](skills/tigerai/code-to-workflow/SKILL.md)。
 
 ---
 
@@ -122,31 +152,39 @@ TigerAI-Code2n8n-Skill-Pack/
 ├── README.md                  ← 你在這裡
 ├── CODE2N8N.md                ← Code2n8n 宣言（定位與核心論點）
 ├── 01-INSTALL.md              ← 安裝步驟
-├── 02-USAGE-MODES.md          ← 三種使用方式
+├── 02-USAGE-MODES.md          ← 三種從零使用模式
 ├── 03-FIRST-WORKFLOW.md       ← 跟我做：第一個 workflow
 ├── 04-FAQ.md                  ← 常見問題
 │
 ├── cookbook/                  ← 8 個照抄範例（每個有自然語言版 + DSL 折疊）
 │   └── 00-INDEX.md
 │
-├── skills/                    ← AI 助理載入的 13 個 Skill
-│   ├── _vendor/                  7 個官方 n8n-skills（MIT）
-│   └── tigerai/                  6 個 TigerAI 自製（含 AG 自動安裝 Skill）
+├── skills/                    ← 13 個實體 Skill 目錄；plugin manifest 登錄 14 筆
+│   ├── _vendor/                  6 個 vendor n8n-skills（MIT）
+│   └── tigerai/                  7 個 TigerAI 執行 Skill
+│       ├── code-to-workflow/        ← 旗艦：既有程式 / 系統 → n8n
+│       └── n8n-code-to-native/      ← Code node → 原生 n8n node
 │
 ├── spec/                      ← 技術規範（給工程師）
 │   ├── sticky-note-three-layer.md
 │   └── sticky-note-dsl.md
 │
+├── examples/google-workspace-admin-workflow/    ← 1,373 行 Apps Script → n8n
+├── examples/line-ai-customer-service/           ← 雲端 LINE 客服 → n8n + 後台
+├── examples/line-ai-customer-service-onprem/    ← 地端 Docker + Qdrant RAG（不可直接上線）
 ├── examples/tigerai-flagship/ ← 3 個企業級範例（含 SDD）
 ├── reference-workflows/       ← 2,061 個公開 workflow（AI 對照語料）
 ├── research/                  ← 研究與統計（給工程師）
 ├── tests/                     ← 三輪驗收紀錄
 │
 ├── CHANGELOG.md / VERSION
+├── LICENSE                    ← 整套 Pack 的 MIT 授權
 ├── install.sh / install.ps1   ← 安裝腳本（支援 Claude Code 與 Antigravity）
 ├── .agent/workflows/          ← Antigravity 專屬自動化流程（如 /install-n8n-pack）
 └── plugin.json                ← Skill 清單
 ```
+
+> ⚠️ `plugin.json` 目前另登錄一筆 maintenance skill `install-tigerai-n8n-pack`，但對應實體目錄尚未納入 repository；因此 manifest 是 14 筆，實體 Skill 目錄是 13 個。發版前應補齊該目錄或移除失效 entry。
 
 ---
 
@@ -164,9 +202,16 @@ TigerAI-Code2n8n-Skill-Pack/
 
 ### 我是工程師 / 整合者
 1. 本檔 → `spec/sticky-note-three-layer.md` + `spec/sticky-note-dsl.md`
-2. `skills/tigerai/sticky-note-to-workflow/SKILL.md`：核心執行邏輯
-3. `skills/tigerai/n8n-api-bridge/SKILL.md`：n8n REST API SOP
-4. `research/patterns.md`：7 大標準骨架 + 反模式
+2. 有既有程式要移植：`skills/tigerai/code-to-workflow/SKILL.md`
+3. 從零需求產 workflow：`skills/tigerai/sticky-note-to-workflow/SKILL.md`
+4. `skills/tigerai/n8n-api-bridge/SKILL.md`：n8n REST API SOP
+5. `research/patterns.md`：7 大標準骨架 + 反模式
+
+### 我有既有程式，想搬到 n8n
+1. 先讀 [`CODE2N8N.md`](CODE2N8N.md) 理解「保留程式 + 上升流程」的分工
+2. 用 [`code-to-workflow`](skills/tigerai/code-to-workflow/SKILL.md) 做 source inventory、分區與 Step 1.5 安全審查
+3. 對照三個實證案例：Google Workspace、LINE 雲端版、LINE 地端版
+4. 通過靜態 lint、n8n REST import，再使用真實 credential 做端到端驗證
 
 ### 我要分發給內部團隊用
 1. 本檔 → `01-INSTALL.md` 跑通
@@ -202,15 +247,29 @@ TigerAI-Code2n8n-Skill-Pack/
 |---|---|
 | AI 寫的 workflow 不一致、難 review | 強制三層結構 |
 | 使用者不會寫需求給 AI | 自然語言便利貼 + 8 個 cookbook + 問答模式 |
-| AI 不夠懂 n8n | 沿用 7 個官方 Skill + 2,061 個 workflow 語料 |
+| AI 不夠懂 n8n | 沿用 6 個官方 Skill + 2,061 個 workflow 語料 |
+| 不知道既有程式哪些該留、哪些該移到 n8n | `code-to-workflow` 7 步驟移植方法論 + 三個實證案例 |
+| AI 寫的程式能 demo，但認證、SQL 與秘密管理可能不能上線 | 強制 Step 1.5 security audit；未修補的缺陷必須用 `SECURITY-CAVEATS.md` 公開揭露 |
 | 沒有企業級模式 | 4 大支柱：原子化 / Universal Worker / SDD / 安全 |
 | 不知怎麼開始 | `03-FIRST-WORKFLOW.md` 15 分鐘手把手 |
 
 ---
 
-## 📊 真實環境驗收成績（v0.9.0 R3）
+## 🧪 Code2n8n 實證案例
 
-對使用者既有的 n8n 2.10.3 + Postgres 環境跑 8 個情境：
+| 案例 | Code2n8n 路徑 | 證據 |
+|---|---|---|
+| [Google Workspace 行政流程](examples/google-workspace-admin-workflow/) | 1,373 行 Apps Script → core + entry n8n workflows | `PROVENANCE.md` 逐項對照；靜態 lint 0 error / 0 warning；n8n REST import 7/7 |
+| [LINE AI 客服雲端版](examples/line-ai-customer-service/) | Netlify Functions + Supabase → n8n runtime + approach C 後台 | 靜態 lint 0 error / 0 warning；n8n REST import 6/6 |
+| [LINE AI 客服地端版](examples/line-ai-customer-service-onprem/) | Docker + Postgres + Redis + Qdrant + Ollama + n8n | 37 節點 workflow、5 階段 V&V；安全審查揭露重大缺陷，**不可直接上線** |
+
+第三個案例刻意保留上游 POC 的安全缺陷並公開記錄於 [`SECURITY-CAVEATS.md`](examples/line-ai-customer-service-onprem/SECURITY-CAVEATS.md)。這不是「驗收失敗被藏起來」，而是 Code2n8n 的核心原則：**AI 寫的能跑，不代表企業能上線。**
+
+---
+
+## 📊 歷史驗收基準（v0.9.0 R3）
+
+以下是三層 workflow 生成能力在 v0.9.0 R3 時建立的真實環境基準；目前 Pack 版本為 v0.22.2，上方三個 Code2n8n 案例則是 v0.22.x 的新增驗證證據。
 
 | 層 | 通過率 |
 |---|---|

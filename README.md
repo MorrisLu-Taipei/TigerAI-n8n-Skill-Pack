@@ -7,8 +7,30 @@
 
 ![TigerAI Code2n8n Skill Pack — full pipeline diagram](docs/images/tigerai-flow-en.png)
 
-> 📊 **The whole pack in one picture**: User writes yellow sticky notes (Layer 1 intent) → Code2n8n Skill Pack brain (Cookbook + 2,061 reference workflows + DSL v1.2 + 13 skills + 4 enterprise patterns) → Three-layer workflow JSON (real n8n workflow), ready for enterprise governance (login, audit, version, handover, cross-system orchestration).
+> 📊 **The whole pack in one picture**: Natural-language intent *or* an existing program system → Code2n8n Skill Pack (Cookbook + 2,061 reference workflows + DSL v1.2 + **14 manifest skills** + 4 enterprise patterns) → decides what logic stays as code vs lifts into an n8n node → emits a reviewable, hand-off-able, cross-system n8n workflow.
 > *by n8n Taipei Ambassador Morris Lu*
+
+---
+
+## 🔄 Two Code2n8n paths
+
+This pack does more than turn sticky notes into workflows. It supports two directions:
+
+```text
+Path A: from zero
+natural language / yellow sticky note
+  → sticky-note-to-workflow
+  → n8n workflow
+
+Path B: port an existing system
+Apps Script / Express / Lambda / Netlify Functions / Docker stack
+  → code-to-workflow (inventory, partition, security audit, port, validate)
+  → code modules + n8n workflow + migration docs
+```
+
+Code2n8n **does not transliterate every line of Python or JavaScript into nodes**. It re-partitions the system: complex algorithms stay in code, while triggers, cross-system wiring, retries, human approvals, notifications, and execution history lift into a visible, manageable workflow.
+
+> **AI Coding solves "how is the function built"; Code2n8n solves "how is the capability modularized *and audited*"; n8n solves "how the modules cooperate across the whole enterprise."**
 
 ---
 
@@ -29,7 +51,7 @@ This Skill Pack is itself a working demo of **Agentic Engineering**:
 
 ### Agentic footprints in this repo
 
-- **`skills/`** — 13 Claude Code / Antigravity skills; each `SKILL.md` is co-authored by humans and AI
+- **`skills/`** — `plugin.json` registers **14 Claude Code / Antigravity skills**; each `SKILL.md` is co-authored by humans and AI
 - **`.agent/workflows/`** — Antigravity-native agentic workflows (e.g. `/install-n8n-pack` one-shot installer)
 - **`cookbook/`** — 8 natural-language → workflow examples showing how to "talk to" the AI
 - **`spec/sticky-note-three-layer.md`** — Three-layer structure spec that forces reviewable AI output
@@ -39,6 +61,7 @@ This Skill Pack is itself a working demo of **Agentic Engineering**:
 ### Who should study this project
 
 - Developers / PMs learning **how to use an AI agent as an engineering teammate**
+- Teams who already have **Apps Script, Express, Lambda, Netlify Functions, or a Docker stack** and want to evaluate **what stays in code vs what moves into n8n**
 - Teams evaluating **whether Antigravity / Claude Code can replace hand-written skills / workflows**
 - Anyone curious **what real human-AI co-authored engineering output looks like**
 
@@ -51,7 +74,7 @@ This Skill Pack is itself a working demo of **Agentic Engineering**:
 | Tool | What you do | What the AI does |
 |---|---|---|
 | **Antigravity** | Open your n8n project in Antigravity, run `/install-n8n-pack`, then describe what you want in plain language | `.agent/workflows/` auto-reads your intent → emits workflow JSON → deploys via n8n API |
-| **Claude Code (CLI / VS Code)** | Run `bash install.sh` (or `install.ps1`) in your working dir, then say "I want a workflow that…" | 13 skills auto-load → three-layer workflow produced → ready to import into n8n |
+| **Claude Code (CLI / VS Code)** | Run `bash install.sh` (or `install.ps1`) in your working dir, then describe a new requirement *or* point at existing code | Skills auto-load → generate a workflow from scratch, or run the full Code2n8n port |
 | **Any AI assistant (ChatGPT / Gemini)** | Paste an example from [`cookbook/`](cookbook/00-INDEX.en.md) as a few-shot prompt | Imitates the three-layer structure and emits a compliant workflow JSON |
 
 **Typical interaction** (30-second mental model):
@@ -66,9 +89,13 @@ AI ──> You: ✅ workflow.json generated (Schedule → Shopify → Code → E
              ✅ Deployed to your n8n via API, webhook URL: https://...
 ```
 
-> 🎯 **The core idea**: Users don't need to understand n8n internals — they just need to "talk like a human" to the AI. The Skill Pack ensures the AI's output is spec-compliant, reviewable, and maintainable.
+> 🎯 **The core idea**: Users don't need to memorise n8n node syntax — clear requirements are enough to get a structured, reviewable, maintainable workflow. To claim it's *production-ready* still requires credential setup, live validation, and a security audit.
 
-See [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) for the three usage modes and [`03-FIRST-WORKFLOW.en.md`](03-FIRST-WORKFLOW.en.md) for a 15-minute hands-on walkthrough.
+If you already have code, don't rewrite it into a sticky note. Just say:
+
+> "Use `code-to-workflow` to inventory this project, decide what stays in code vs moves to n8n; do the security audit first, then emit SDD, workflow, and validation results."
+
+See [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) (three intent-driven modes) and [`03-FIRST-WORKFLOW.en.md`](03-FIRST-WORKFLOW.en.md) (15-minute hands-on); for porting existing code, go straight to [`code-to-workflow`](skills/tigerai/code-to-workflow/SKILL.md).
 
 ---
 
@@ -78,7 +105,7 @@ See [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) for the three usage modes and
 |---|---|---|
 | 0️⃣ | **This README.md** | Overview, start here (5 min) |
 | 1️⃣ | [`01-INSTALL.en.md`](01-INSTALL.en.md) | First-time setup (10 min) |
-| 2️⃣ | [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) | Pick your usage style (5 min) |
+| 2️⃣ | [`02-USAGE-MODES.en.md`](02-USAGE-MODES.en.md) | Pick your intent-driven usage style (5 min) |
 | 3️⃣ | [`03-FIRST-WORKFLOW.en.md`](03-FIRST-WORKFLOW.en.md) | Hands-on: build your first workflow (15 min) |
 | 4️⃣ | [`04-FAQ.en.md`](04-FAQ.en.md) | Reference when stuck |
 
@@ -105,13 +132,16 @@ You ask AI to build it. The canvas now shows a complete workflow:
 
 No code. No syntax to learn. No need to memorize n8n node names.
 
-### Three usage modes (details in [02-USAGE-MODES.en.md](02-USAGE-MODES.en.md))
+### Four usage modes
 
 | Mode | When | Trigger phrase |
 |---|---|---|
 | 🪄 Cookbook copy | You know what you want, fast | Copy from [cookbook](cookbook/00-INDEX.en.md) |
 | 💬 Q&A mode | You have no idea how to describe it | "enable Q&A mode" / "問答模式" |
 | 🔍 Example finder | Want to see prior art first | "find examples for X" / "範例查詢" |
+| 🔄 Code2n8n port | You have existing code or a system and want it governable in n8n | "Use `code-to-workflow` to analyse and port this project" |
+
+The first three start from intent. The fourth starts from existing code. Full Code2n8n methodology: [`skills/tigerai/code-to-workflow/SKILL.md`](skills/tigerai/code-to-workflow/SKILL.md).
 
 ---
 
@@ -122,28 +152,39 @@ TigerAI-Code2n8n-Skill-Pack/
 ├── README.md / README.zh.md ← You are here
 ├── CODE2N8N.md              ← Code2n8n manifesto (positioning + thesis)
 ├── 01-INSTALL.md/.en.md       ← Install
-├── 02-USAGE-MODES.md/.en.md   ← Three usage modes
+├── 02-USAGE-MODES.md/.en.md   ← Three intent-driven usage modes
 ├── 03-FIRST-WORKFLOW.md/.en.md ← Hands-on tutorial
 ├── 04-FAQ.md/.en.md           ← Common questions
 │
 ├── cookbook/                  ← 8 copy-paste recipes (each has plain-language + DSL fold)
 │   └── 00-INDEX.md/.en.md
 │
-├── skills/                    ← 13 Skills loaded by AI assistant
-│   ├── _vendor/                  7 official n8n-skills (MIT)
-│   └── tigerai/                  6 TigerAI custom (incl. AG Auto-Install)
+├── skills/                    ← 13 skill folders on disk; plugin manifest registers 14 entries
+│   ├── _vendor/                  6 vendor n8n-skills (MIT)
+│   └── tigerai/                  7 TigerAI execution skills
+│       ├── code-to-workflow/        ← Marquee: existing code / system → n8n
+│       └── n8n-code-to-native/      ← Code node → native n8n nodes
 │
 ├── spec/                      ← Technical specs (for engineers)
+│   ├── sticky-note-three-layer.md
+│   └── sticky-note-dsl.md
+│
+├── examples/google-workspace-admin-workflow/    ← 1,373-line Apps Script → n8n
+├── examples/line-ai-customer-service/           ← Cloud LINE CS → n8n + admin UI
+├── examples/line-ai-customer-service-onprem/    ← On-prem Docker + Qdrant RAG (NOT deployable as-is)
 ├── examples/tigerai-flagship/ ← 3 enterprise-grade examples (with SDD)
 ├── reference-workflows/       ← 2,061 public workflows (AI corpus)
 ├── research/                  ← Research artifacts
 ├── tests/                     ← Three rounds of acceptance reports
 │
 ├── CHANGELOG.md / VERSION
-├── install.sh / install.ps1   ← Install scripts (Supports Claude Code & Antigravity)
+├── LICENSE                    ← Pack-wide MIT license
+├── install.sh / install.ps1   ← Install scripts (supports Claude Code & Antigravity)
 ├── .agent/workflows/          ← Antigravity-exclusive workflows (e.g., /install-n8n-pack)
 └── plugin.json                ← Skill manifest
 ```
+
+> ⚠️ `plugin.json` currently registers one extra maintenance skill, `install-tigerai-n8n-pack`, whose folder is not yet committed to the repository — that's why the manifest has 14 entries while the on-disk skills directory has 13. Either add the missing folder or remove the stale entry before the next release.
 
 ---
 
@@ -156,14 +197,23 @@ TigerAI-Code2n8n-Skill-Pack/
 
 ### I'm experienced with n8n, evaluating this Pack
 1. This file → `02-USAGE-MODES.en.md`
-2. Read `tests/REPORT-3.md`: real n8n acceptance scores
-3. Browse `examples/tigerai-flagship/`: enterprise-grade SDD examples
+2. Read `tests/REPORT-3.en.md`: historical acceptance baseline (v0.9.0 R3)
+3. Browse any of the three Code2n8n case studies under [`examples/`](examples/) for current evidence
+4. Browse `examples/tigerai-flagship/`: enterprise-grade SDD examples
 
 ### I'm an engineer / integrator
 1. This file → `spec/sticky-note-three-layer.md` + `spec/sticky-note-dsl.md`
-2. `skills/tigerai/sticky-note-to-workflow/SKILL.md`: the core executor
-3. `skills/tigerai/n8n-api-bridge/SKILL.md`: n8n REST API SOP
-4. `research/patterns.md`: 7 standard skeletons + anti-patterns
+2. Porting existing code: `skills/tigerai/code-to-workflow/SKILL.md`
+3. Building from scratch intent: `skills/tigerai/sticky-note-to-workflow/SKILL.md`
+4. `skills/tigerai/n8n-api-bridge/SKILL.md`: n8n REST API SOP
+5. `research/patterns.md`: 7 standard skeletons + anti-patterns
+
+### I have existing code I want to move into n8n
+1. Read [`CODE2N8N.md`](CODE2N8N.md) first to understand the "keep in code / lift to flow" split
+2. Use [`code-to-workflow`](skills/tigerai/code-to-workflow/SKILL.md) for source inventory, partitioning, and **Step 1.5 security audit**
+3. Compare against the three empirical case studies: Google Workspace admin, LINE cloud, LINE on-prem
+4. Pass static lint + n8n REST import, then end-to-end with real credentials
+5. If security findings remain unfixed, per marquee skill hard rule §3, publish a `SECURITY-CAVEATS.md` — see the on-prem LINE CS example for the template
 
 ### I'm distributing this to my team
 1. This file → run `01-INSTALL.en.md` end-to-end
@@ -200,15 +250,29 @@ TigerAI-Code2n8n-Skill-Pack/
 |---|---|
 | AI-written workflows are inconsistent, hard to review | Enforce three-layer structure |
 | Users don't know how to describe what they want | Plain-language stickies + 8 cookbooks + Q&A mode |
-| AI doesn't know n8n well enough | 7 official Skills + 2,061 workflow corpus |
+| AI doesn't know n8n well enough | 6 vendor official Skills + 2,061 workflow corpus |
+| Don't know what existing code to keep vs move into n8n | `code-to-workflow` 7-step methodology + 3 empirical case studies |
+| AI-written code demos fine but auth / SQL / secret management may not ship | Mandatory **Step 1.5 security audit**; unresolved findings disclosed via `SECURITY-CAVEATS.md` |
 | No enterprise-grade patterns | 4 pillars: Atomic Orchestration / Universal Worker / SDD / Security |
 | Don't know where to start | `03-FIRST-WORKFLOW.en.md` 15-min hands-on |
 
 ---
 
-## 📊 Real-environment acceptance results (v0.9.0 R3)
+## 🧪 Code2n8n empirical case studies
 
-Tested 8 scenarios on a real n8n 2.10.3 + Postgres setup:
+| Case | Code2n8n path | Evidence |
+|---|---|---|
+| [Google Workspace admin workflow](examples/google-workspace-admin-workflow/) | 1,373-line Apps Script → core + entry n8n workflows | Line-by-line `PROVENANCE.md`; static lint 0 err / 0 warn; n8n REST import 7/7 |
+| [LINE AI customer service (cloud)](examples/line-ai-customer-service/) | Netlify Functions + Supabase → n8n runtime + approach-C admin UI | Static lint 0 err / 0 warn; n8n REST import 6/6 |
+| [LINE AI customer service (on-prem)](examples/line-ai-customer-service-onprem/) | Docker + Postgres + Redis + Qdrant + Ollama + n8n | 37-node workflow; 5-phase V&V; security audit disclosed major defects — **DO NOT DEPLOY AS-IS** |
+
+The third case deliberately preserves the upstream POC's security defects and documents them in [`SECURITY-CAVEATS.md`](examples/line-ai-customer-service-onprem/SECURITY-CAVEATS.md). This isn't "failed acceptance swept under the rug" — it's Code2n8n's core principle: **AI-written software that runs is not automatically software an enterprise can deploy.**
+
+---
+
+## 📊 Historical baseline acceptance (v0.9.0 R3)
+
+The numbers below were the real-environment baseline for three-layer workflow generation as of **v0.9.0 R3**; the current pack version is **v0.22.2**, and the three Code2n8n case studies above are the v0.22.x evidence layer that supersedes pure-generation acceptance.
 
 | Layer | Pass rate |
 |---|---|
