@@ -19,23 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
----
-
-## Notes on bundled third-party material
-
-This pack bundles material from several upstream MIT-licensed projects, each of
-which retains its own copyright and license notice in its respective
-subdirectory:
-
-- `skills/_vendor/` — vendor skills, MIT, see `skills/_vendor/LICENSE`
-- `examples/line-ai-customer-service-onprem/` — derived from
-  `scorpioliu0953/ai_customer_service`, MIT, see the example's `LICENSE` and
-  `CREDITS.md`
-- `examples/line-ai-customer-service/` — derived from the same upstream, with
-  attribution in the example's `CREDITS.md`
-- `examples/google-workspace-admin-workflow/` — derived from
-  `mihozip/google-workspace-admin-project-workflow`, with attribution in the
-  example's `CREDITS.md` and `PROVENANCE.md` (line-pinned to upstream commit)
-
-See `THIRD_PARTY_NOTICES.md` for the full list and attribution chain.
