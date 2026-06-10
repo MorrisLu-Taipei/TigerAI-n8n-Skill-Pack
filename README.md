@@ -3,7 +3,7 @@
 > 🌐 **English** | [繁體中文](README.zh.md)
 > 📖 **Why Code2n8n?** Read the [Code2n8n manifesto](CODE2N8N.md) — why enterprises need n8n *more* in the AI-coding era, not less.
 
-> **The Code2n8n positioning**: AI Coding (Claude Code / Codex / Antigravity) is great at *writing* code. n8n is great at making code *manageable by an enterprise*. This pack is the bridge — describe what you want in plain language, get a runnable n8n workflow that IT, operations, and managers can all read, audit, hand off, and govern.
+> **The Code2n8n positioning**: AI Coding (Claude Code / Codex / Antigravity) is great at *writing* code. n8n is great at making code *manageable by an enterprise*. This pack is the bridge — **describe a requirement, *or* point at an existing system** (Apps Script / Express / Lambda / Docker stack), and get a runnable n8n workflow that IT, operations, and managers can all read, audit, hand off, and govern.
 
 ![TigerAI Code2n8n Skill Pack — full pipeline diagram](docs/images/tigerai-flow-en.png)
 
@@ -31,6 +31,16 @@ Apps Script / Express / Lambda / Netlify Functions / Docker stack
 Code2n8n **does not transliterate every line of Python or JavaScript into nodes**. It re-partitions the system: complex algorithms stay in code, while triggers, cross-system wiring, retries, human approvals, notifications, and execution history lift into a visible, manageable workflow.
 
 > **AI Coding solves "how is the function built"; Code2n8n solves "how is the capability modularized *and audited*"; n8n solves "how the modules cooperate across the whole enterprise."**
+
+### 🧪 Proof bar — the marquee skill is grounded in 3 real ports
+
+| Case | Upstream → n8n | Headline number |
+|---|---|---|
+| [Google Workspace admin](examples/google-workspace-admin-workflow/) | 1,373-line Apps Script → 7 workflows (core + entry + setup) | Line-by-line `PROVENANCE.md` + import 7/7 |
+| [LINE customer service (cloud)](examples/line-ai-customer-service/) | Netlify + Supabase → core + entry + approach-C admin | Import 6/6 |
+| [LINE customer service (on-prem)](examples/line-ai-customer-service-onprem/) | Docker + Postgres + Redis + Qdrant + Ollama → 37-node brain | 5-phase V&V + ⚠️ `SECURITY-CAVEATS.md` (deliberately not deployable) |
+
+Full evidence table further down. The bar above is what *immediately* backs the two-path claim — if any of these three case studies disappear, the claim weakens.
 
 ---
 

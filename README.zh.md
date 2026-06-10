@@ -3,7 +3,7 @@
 > 🌐 [English](README.md) | **繁體中文**
 > 📖 **什麼是 Code2n8n？** 讀 [Code2n8n 宣言](CODE2N8N.md) — 為什麼 AI Coding 時代企業反而**更**需要 n8n。
 
-> **Code2n8n 的定位**：AI Coding（Claude Code / Codex / Antigravity）擅長把程式「寫出來」；n8n 擅長把程式變成「企業管得住」的流程資產。這個 pack 就是兩者之間的橋 — 用自然語言描述需求，產出 IT、營運、主管都看得懂、稽核得了、交接得下去、跨系統治理得來的 n8n workflow。
+> **Code2n8n 的定位**：AI Coding（Claude Code / Codex / Antigravity）擅長把程式「寫出來」；n8n 擅長把程式變成「企業管得住」的流程資產。這個 pack 就是兩者之間的橋 — **描述一個需求，或 指向一個既有系統**（Apps Script / Express / Lambda / Docker stack），產出 IT、營運、主管都看得懂、稽核得了、交接得下去、跨系統治理得來的 n8n workflow。
 
 ![TigerAI Code2n8n Skill Pack 完整流程圖](docs/images/tigerai-flow.png)
 
@@ -31,6 +31,16 @@ Apps Script / Express / Lambda / Netlify Functions / Docker stack
 Code2n8n **不是逐行把 Python 或 JavaScript 翻成節點**。它做的是系統重新分工：複雜演算法留在程式，觸發、跨系統串接、重試、人工核准、通知與執行紀錄上升為可見、可管理的 workflow。
 
 > **AI Coding 解決「功能怎麼做」；Code2n8n 解決「功能如何模組化與審查」；n8n 解決「模組如何與整個企業協作」。**
+
+### 🧪 Proof bar — marquee skill 是從 3 個真實移植案例淬煉出來的
+
+| 案例 | 上游 → n8n | 關鍵數字 |
+|---|---|---|
+| [Google Workspace 行政流程](examples/google-workspace-admin-workflow/) | 1,373 行 Apps Script → 7 條 workflow（core + entry + setup） | 逐行 `PROVENANCE.md` + import 7/7 |
+| [LINE AI 客服雲端版](examples/line-ai-customer-service/) | Netlify + Supabase → core + entry + approach C 後台 | Import 6/6 |
+| [LINE AI 客服地端版](examples/line-ai-customer-service-onprem/) | Docker + Postgres + Redis + Qdrant + Ollama → 37 節點大腦 | 5 階段 V&V + ⚠️ `SECURITY-CAVEATS.md`（刻意保留不可上線） |
+
+完整證據表還在後面。上面這條是**第一屏就支撐兩條路徑宣稱**的證據 — 三個案例若有任何一個消失，宣稱就站不住。
 
 ---
 
